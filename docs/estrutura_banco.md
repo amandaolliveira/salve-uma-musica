@@ -21,7 +21,7 @@ Não existe usuários nesse jogo, é um aplicativo que depende de armazenamento 
     artista: {
         id_artista: 5,
         nome_artista: "My Chemical Romance"
-    }
+    },
     duracao: 197,
     adicionado_manualmente: false,    
     url_capa: "https://capasdemusica/ghostofyou" //faz sentido ter uma URL opcional por track, pois algumas músicas são SINGLES
