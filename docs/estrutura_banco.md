@@ -14,7 +14,7 @@ Não existe usuários nesse jogo, é um aplicativo que depende de armazenamento 
 ## Collections internas do Jogo
 
 ### musica
-```json
+```js
 {
     _id: 1,
     titulo: "The Ghost of You",
@@ -29,7 +29,7 @@ Não existe usuários nesse jogo, é um aplicativo que depende de armazenamento 
 ```
 
 ### artista
-```json
+```js
 {
     _id: 5,
     nome: "My Chemical Romance",
