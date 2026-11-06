@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frontend 3: The HTML map</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Frontend 3: The HTML map</h1>
+<p class="lede">Win: know what in <code>frontend/index.html</code> you can change freely and what would break the app, then write the base of <code>style.css</code> (colors, fonts, sections, buttons) and make your first commit.</p>
+
+<h2>1. How app.js finds things</h2>
+<p><code>app.js</code> finds elements by <b>id</b>, for example <code>document.getElementById('lista-musicas')</code>. If you rename or remove one of these ids, that part of the page stops working (and the browser console, F12, shows an error). <b>Never rename these ids:</b></p>
+<table>
+<tr><th>Part</th><th>ids used by app.js</th></tr>
+<tr><td>Messages</td><td><code>mensagem</code></td></tr>
+<tr><td>Game</td><td><code>form-jogo</code>, <code>jogo-tamanho</code>, <code>jogo-genero</code>, <code>confronto</code>, <code>confronto-fase</code>, <code>confronto-progresso</code>, <code>jogo-abandonar</code>, <code>vencedor</code>, <code>vencedor-capa</code>, <code>vencedor-titulo</code>, <code>vencedor-artista</code>, <code>vencedor-vitorias</code>, <code>jogo-novo</code></td></tr>
+<tr><td>Dashboard</td><td><code>indicadores</code>, <code>grafico-ranking</code>, <code>grafico-generos</code>, <code>ranking</code>, <code>tabela-generos</code></td></tr>
+<tr><td>Songs</td><td><code>busca</code>, <code>filtro-genero</code>, <code>filtro-origem</code>, <code>contagem</code>, <code>lista-musicas</code></td></tr>
+<tr><td>Form</td><td><code>form-titulo</code>, <code>form-musica</code>, <code>lista-generos</code>, <code>form-erros</code>, <code>form-enviar</code>, <code>form-cancelar</code></td></tr>
+<tr><td>Import</td><td><code>form-importar</code>, <code>importar-genero</code></td></tr>
+</table>
+<p>Also keep:</p>
+<ul>
+<li>The two <code>&lt;button class="opcao" data-lado="0|1"&gt;</code> inside <code>#confronto</code>, each with an <code>&lt;img&gt;</code>, a <code>.opcao-titulo</code> and a <code>.opcao-artista</code> inside.</li>
+<li>The <code>name</code> of the form fields (<code>titulo</code>, <code>nome_artista</code>, <code>genero</code>, <code>duracao</code>, <code>url_capa</code>).</li>
+<li>The <code>&lt;tbody&gt;</code> of <code>#tabela-generos</code>.</li>
+</ul>
+
+<h2>2. Elements that app.js creates</h2>
+<p>Some elements do not exist in the HTML: <code>app.js</code> builds them. You cannot add classes to them in <code>index.html</code>; style them with the classes they already have:</p>
+<pre>#lista-musicas
+  li.musica
+    img.capa
+    div.musica-info
+      strong.musica-titulo
+      span.musica-artista
+      span.musica-detalhes
+    div.musica-acoes
+      button.botao-editar  button.botao-zerar  button.botao-excluir
+  li.vazio                (when the list is empty)
+
+#indicadores
+  div.indicador
+    span.indicador-valor
+    span.indicador-rotulo
+
+#mensagem   gets class="mensagem carregando", "mensagem sucesso" or "mensagem erro"</pre>
+<p class="note"><code>app.js</code> replaces the whole <code>class</code> of <code>#mensagem</code>, so a class you add to it in the HTML is lost. Style it with <code>.mensagem.erro</code>, <code>.mensagem.sucesso</code> and so on.</p>
+
+<h2>3. What you are free to do</h2>
+<ul>
+<li>Add classes to any element in <code>index.html</code>.</li>
+<li>Wrap elements in new <code>&lt;div&gt;</code>s to help the layout.</li>
+<li>Change texts, headings and the order of the sections.</li>
+</ul>
+<p>The HTML already has a class on almost every block (<code>.cabecalho</code>, <code>.menu</code>, <code>.secao</code>, <code>.filtros</code>, <code>.confronto-opcoes</code>, <code>.form-musica</code>, <code>.graficos</code>...). The answer keys in this track only use those.</p>
+
+<h2>4. The <code>hidden</code> trap</h2>
+<p>The game screen, the winner box and the messages are shown and hidden by <code>app.js</code> with the <code>hidden</code> attribute (<a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/hidden">MDN: hidden</a>). The browser hides it with a very weak rule, so if you write <code>.confronto { display: flex; }</code>, your rule wins and the element <b>never hides again</b>. The first line of your CSS fixes that:</p>
+<pre>[hidden] { display: none !important; }</pre>
+
+<h2>5. CSS variables</h2>
+<p>Write your colors once, at the top, and reuse them (<a href="https://developer.mozilla.org/pt-BR/docs/Web/CSS/Using_CSS_custom_properties">MDN: custom properties</a>):</p>
+<pre>:root { --destaque: #6c3df4; }
+button { background: var(--destaque); }</pre>
+<p>Changing the theme later is changing one line.</p>
+
+<h2>6. Your first CSS</h2>
+<div class="task">
+<p>Open <code>frontend/style.css</code> (it is empty) and write, in this order. Reload (Ctrl+F5) after each step and look:</p>
+<ol>
+<li>The <code>[hidden]</code> rule.</li>
+<li>A <code>:root</code> with your color variables: page background, card background, text, soft text, highlight, text on highlight, border, success, error, and a border radius.</li>
+<li><code>* { box-sizing: border-box; }</code>: width and padding add up the way you expect.</li>
+<li><code>body</code>: no margin, a font, the background and text colors.</li>
+<li><code>main</code>: maximum width about 1100px, centered (<code>margin: 0 auto</code>), with 16px of side padding.</li>
+<li><code>.secao</code>: each section as a white card with padding, border and rounded corners, with space between them.</li>
+<li><code>button</code>, <code>input</code> and <code>select</code>: same font as the page, padding, rounded corners; buttons with the highlight color.</li>
+</ol>
+<p>Pick your own colors. The key below is one possible result.</p>
+</div>
+
+<details><summary>Answer key</summary>
+<pre>[hidden] { display: none !important; }
+
+:root {
+  --fundo: #f6f4fb;
+  --superficie: #ffffff;
+  --texto: #1f1d2b;
+  --texto-suave: #6b6880;
+  --destaque: #6c3df4;
+  --destaque-texto: #ffffff;
+  --borda: #e2def0;
+  --sucesso: #1e8e4e;
+  --erro: #c0392b;
+  --raio: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  background: var(--fundo);
+  color: var(--texto);
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+.secao {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+button {
+  font: inherit;
+  padding: 8px 14px;
+  border: 1px solid var(--destaque);
+  border-radius: 8px;
+  background: var(--destaque);
+  color: var(--destaque-texto);
+  cursor: pointer;
+}
+
+input, select {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  background: var(--superficie);
+  color: var(--texto);
+}</pre>
+</details>
+
+<h2>7. Check that nothing broke, then commit</h2>
+<div class="task">
+<ol>
+<li>Start a game: the options appear. Abandon it: they disappear (the <code>[hidden]</code> rule works).</li>
+<li>F12 → <b>Console</b>: no red errors.</li>
+<li>Commit:
+<pre>git branch                    the asterisk must be on frontend
+git add frontend/style.css
+git commit -m "style: base do layout (cores, seções e botões)"
+git push</pre></li>
+</ol>
+<p class="note">Commit at the end of each lesson of this track. Several small commits show your work better than one big commit.</p>
+</div>
+
+<h2>8. Check yourself</h2>
+<div class="quiz" data-answer="3" data-why="app.js looks the element up by id; a renamed id returns nothing and that part breaks.">
+<p>What happens if you rename <code>id="lista-musicas"</code> to <code>id="musicas-lista"</code>?</p>
+<button>Nothing, ids are only for CSS</button>
+<button>The list gets a different style</button>
+<button>The browser renames it back</button>
+<button>app.js cannot find it and the list breaks</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="Your display rule beats the browser's weak hidden rule, so the [hidden] rule with !important is needed.">
+<p>After <code>.vencedor { display: flex; }</code>, the winner box never hides. Why?</p>
+<button>Your display rule beats the browser's rule for hidden</button>
+<button>app.js stopped working</button>
+<button>flex cannot be hidden</button>
+<button>The box needs an id to hide</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="2" data-why="Those elements are built by app.js, so you style them through the classes it gives them.">
+<p>How do you style the song cards?</p>
+<button>Add a class to each li in index.html</button>
+<button>Change app.js to add your classes</button>
+<button>Use the classes app.js already gives them, like .musica</button>
+<button>Cards cannot be styled</button>
+<div class="fb"></div></div>
+</section>
+
+<section lang="pt-BR">
+<h1>Frontend 3: O mapa do HTML</h1>
+<p class="lede">Objetivo: saber o que no <code>frontend/index.html</code> você pode mudar à vontade e o que quebraria o app, depois escrever a base do <code>style.css</code> (cores, fontes, seções, botões) e fazer o seu primeiro commit.</p>
+
+<h2>1. Como o app.js acha as coisas</h2>
+<p>O <code>app.js</code> acha os elementos pelo <b>id</b>, por exemplo <code>document.getElementById('lista-musicas')</code>. Se você renomear ou remover um desses ids, aquela parte da página para de funcionar (e o console do navegador, F12, mostra um erro). <b>Nunca renomeie estes ids:</b></p>
+<table>
+<tr><th>Parte</th><th>ids usados pelo app.js</th></tr>
+<tr><td>Mensagens</td><td><code>mensagem</code></td></tr>
+<tr><td>Jogo</td><td><code>form-jogo</code>, <code>jogo-tamanho</code>, <code>jogo-genero</code>, <code>confronto</code>, <code>confronto-fase</code>, <code>confronto-progresso</code>, <code>jogo-abandonar</code>, <code>vencedor</code>, <code>vencedor-capa</code>, <code>vencedor-titulo</code>, <code>vencedor-artista</code>, <code>vencedor-vitorias</code>, <code>jogo-novo</code></td></tr>
+<tr><td>Painel</td><td><code>indicadores</code>, <code>grafico-ranking</code>, <code>grafico-generos</code>, <code>ranking</code>, <code>tabela-generos</code></td></tr>
+<tr><td>Músicas</td><td><code>busca</code>, <code>filtro-genero</code>, <code>filtro-origem</code>, <code>contagem</code>, <code>lista-musicas</code></td></tr>
+<tr><td>Formulário</td><td><code>form-titulo</code>, <code>form-musica</code>, <code>lista-generos</code>, <code>form-erros</code>, <code>form-enviar</code>, <code>form-cancelar</code></td></tr>
+<tr><td>Importação</td><td><code>form-importar</code>, <code>importar-genero</code></td></tr>
+</table>
+<p>Mantenha também:</p>
+<ul>
+<li>Os dois <code>&lt;button class="opcao" data-lado="0|1"&gt;</code> dentro do <code>#confronto</code>, cada um com um <code>&lt;img&gt;</code>, um <code>.opcao-titulo</code> e um <code>.opcao-artista</code> dentro.</li>
+<li>O <code>name</code> dos campos do formulário (<code>titulo</code>, <code>nome_artista</code>, <code>genero</code>, <code>duracao</code>, <code>url_capa</code>).</li>
+<li>O <code>&lt;tbody&gt;</code> da <code>#tabela-generos</code>.</li>
+</ul>
+
+<h2>2. Elementos que o app.js cria</h2>
+<p>Alguns elementos não existem no HTML: o <code>app.js</code> monta eles. Você não consegue colocar classes neles pelo <code>index.html</code>; estilize pelas classes que eles já têm:</p>
+<pre>#lista-musicas
+  li.musica
+    img.capa
+    div.musica-info
+      strong.musica-titulo
+      span.musica-artista
+      span.musica-detalhes
+    div.musica-acoes
+      button.botao-editar  button.botao-zerar  button.botao-excluir
+  li.vazio                (quando a lista está vazia)
+
+#indicadores
+  div.indicador
+    span.indicador-valor
+    span.indicador-rotulo
+
+#mensagem   recebe class="mensagem carregando", "mensagem sucesso" ou "mensagem erro"</pre>
+<p class="note">O <code>app.js</code> troca o <code>class</code> inteiro do <code>#mensagem</code>, então uma classe que você colocar nele pelo HTML se perde. Estilize com <code>.mensagem.erro</code>, <code>.mensagem.sucesso</code> e assim por diante.</p>
+
+<h2>3. O que você pode fazer à vontade</h2>
+<ul>
+<li>Colocar classes em qualquer elemento do <code>index.html</code>.</li>
+<li>Envolver elementos em <code>&lt;div&gt;</code>s novas para ajudar no layout.</li>
+<li>Mudar textos, títulos e a ordem das seções.</li>
+</ul>
+<p>O HTML já tem uma classe em quase todo bloco (<code>.cabecalho</code>, <code>.menu</code>, <code>.secao</code>, <code>.filtros</code>, <code>.confronto-opcoes</code>, <code>.form-musica</code>, <code>.graficos</code>...). Os gabaritos desta trilha só usam essas.</p>
+
+<h2>4. A armadilha do <code>hidden</code></h2>
+<p>A tela do jogo, a caixa da vencedora e as mensagens são mostradas e escondidas pelo <code>app.js</code> com o atributo <code>hidden</code> (<a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/hidden">MDN: hidden</a>, em inglês). O navegador esconde com uma regra muito fraca, então se você escrever <code>.confronto { display: flex; }</code>, a sua regra ganha e o elemento <b>nunca mais some</b>. A primeira linha do seu CSS resolve isso:</p>
+<pre>[hidden] { display: none !important; }</pre>
+
+<h2>5. Variáveis do CSS</h2>
+<p>Escreva as suas cores uma vez, no topo, e reutilize (<a href="https://developer.mozilla.org/pt-BR/docs/Web/CSS/Using_CSS_custom_properties">MDN: propriedades personalizadas</a>):</p>
+<pre>:root { --destaque: #6c3df4; }
+button { background: var(--destaque); }</pre>
+<p>Trocar o tema depois é trocar uma linha.</p>
+
+<h2>6. Seu primeiro CSS</h2>
+<div class="task">
+<p>Abra o <code>frontend/style.css</code> (ele está vazio) e escreva, nesta ordem. Recarregue (Ctrl+F5) depois de cada passo e olhe:</p>
+<ol>
+<li>A regra do <code>[hidden]</code>.</li>
+<li>Um <code>:root</code> com as variáveis de cor: fundo da página, fundo dos cartões, texto, texto suave, destaque, texto sobre o destaque, borda, sucesso, erro, e um raio de borda.</li>
+<li><code>* { box-sizing: border-box; }</code>: largura e padding somam do jeito que você espera.</li>
+<li><code>body</code>: sem margem, uma fonte, as cores de fundo e de texto.</li>
+<li><code>main</code>: largura máxima de uns 1100px, centralizado (<code>margin: 0 auto</code>), com 16px de padding nas laterais.</li>
+<li><code>.secao</code>: cada seção como um cartão branco com padding, borda e cantos arredondados, com espaço entre elas.</li>
+<li><code>button</code>, <code>input</code> e <code>select</code>: mesma fonte da página, padding, cantos arredondados; botões com a cor de destaque.</li>
+</ol>
+<p>Escolha as suas cores. O gabarito abaixo é um resultado possível.</p>
+</div>
+
+<details><summary>Gabarito</summary>
+<pre>[hidden] { display: none !important; }
+
+:root {
+  --fundo: #f6f4fb;
+  --superficie: #ffffff;
+  --texto: #1f1d2b;
+  --texto-suave: #6b6880;
+  --destaque: #6c3df4;
+  --destaque-texto: #ffffff;
+  --borda: #e2def0;
+  --sucesso: #1e8e4e;
+  --erro: #c0392b;
+  --raio: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  background: var(--fundo);
+  color: var(--texto);
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+.secao {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+button {
+  font: inherit;
+  padding: 8px 14px;
+  border: 1px solid var(--destaque);
+  border-radius: 8px;
+  background: var(--destaque);
+  color: var(--destaque-texto);
+  cursor: pointer;
+}
+
+input, select {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  background: var(--superficie);
+  color: var(--texto);
+}</pre>
+</details>
+
+<h2>7. Confira que nada quebrou, e faça commit</h2>
+<div class="task">
+<ol>
+<li>Comece uma partida: as opções aparecem. Abandone: elas somem (a regra do <code>[hidden]</code> funciona).</li>
+<li>F12 → <b>Console</b>: nenhum erro vermelho.</li>
+<li>Commit:
+<pre>git branch                    o asterisco precisa estar na frontend
+git add frontend/style.css
+git commit -m "style: base do layout (cores, seções e botões)"
+git push</pre></li>
+</ol>
+<p class="note">Faça commit no fim de cada aula desta trilha. Vários commits pequenos mostram melhor o seu trabalho do que um commit grande.</p>
+</div>
+
+<h2>8. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="3" data-why="O app.js procura o elemento pelo id; um id renomeado não é achado e aquela parte quebra.">
+<p>O que acontece se você renomear <code>id="lista-musicas"</code> para <code>id="musicas-lista"</code>?</p>
+<button>Nada, ids são só para o CSS</button>
+<button>A lista ganha outro estilo</button>
+<button>O navegador renomeia de volta</button>
+<button>O app.js não acha e a lista quebra</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="A sua regra de display ganha da regra fraca do navegador para o hidden, por isso precisa da regra [hidden] com !important.">
+<p>Depois de <code>.vencedor { display: flex; }</code>, a caixa da vencedora nunca some. Por quê?</p>
+<button>A sua regra de display ganha da regra do navegador para o hidden</button>
+<button>O app.js parou de funcionar</button>
+<button>Não dá para esconder um flex</button>
+<button>A caixa precisa de um id para sumir</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="2" data-why="Esses elementos são montados pelo app.js, então você estiliza pelas classes que ele dá.">
+<p>Como você estiliza os cartões das músicas?</p>
+<button>Colocando uma classe em cada li no index.html</button>
+<button>Mudando o app.js para pôr as suas classes</button>
+<button>Usando as classes que o app.js já dá, como .musica</button>
+<button>Os cartões não podem ser estilizados</button>
+<div class="fb"></div></div>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
