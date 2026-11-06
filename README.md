@@ -2,7 +2,26 @@
 
 Um jogo onde aparecem duas músicas na tela e você escolhe uma, até sobrar só uma: a música "salva". As músicas vêm das paradas do Deezer e ficam salvas no MongoDB (via RESTHeart).
 
-Mais detalhes em [docs/regras_do_jogo.md](docs/regras_do_jogo.md), [docs/features.md](docs/features.md) e [docs/estrutura_banco.md](docs/estrutura_banco.md).
+## Documentação
+
+- [Regras do jogo](docs/regras_do_jogo.md)
+- [Features](docs/features.md)
+- [Estrutura do banco](docs/estrutura_banco.md)
+- [Uso de IA](docs/uso_de_ia.md)
+- [Coleção do Postman](postman/colecao.json)
+
+### Aulas
+
+Aulas curtas e práticas (em português e inglês) que usamos pra aprender o que cada um fez no projeto. Começam pela [página inicial das aulas](docs/learning/index.html).
+
+| Aulas | Pra quem | Onde |
+|---|---|---|
+| [Aulas base](docs/learning/base/) | todos (a aula 5 é o ensaio da apresentação) | `master` |
+| [Trilha backend / API](docs/learning/trilha-backend/) | API (requisições e Postman) | `master` |
+| [Trilha banco de dados](https://github.com/amandaolliveira/salve-uma-musica/tree/banco-de-dados/docs/learning/trilha-banco-de-dados) | Dados (modelagem e banco) | branch `banco-de-dados` |
+| [Trilha frontend](https://github.com/amandaolliveira/salve-uma-musica/tree/frontend/docs/learning/trilha-frontend) | Interface (CSS) | branch `frontend` |
+
+> As aulas são páginas HTML, então o GitHub mostra só o código delas. Pra ler, clone o repositório e abra o `docs/learning/index.html` no navegador. As trilhas de banco e de frontend ficam nas branches delas até o merge (`git switch banco-de-dados` ou `git switch frontend`).
 
 ## Integrantes
 
@@ -93,4 +112,4 @@ _(pendente)_
 
 ## Uso de IA
 
-Ver [docs/uso_de_ia.md](docs/uso_de_ia.md). As aulas que usamos para aprender estão em [docs/learning](docs/learning/index.html).
+Ver [docs/uso_de_ia.md](docs/uso_de_ia.md). As aulas estão na seção [Documentação](#documentação).
