@@ -8,13 +8,15 @@ Da perspectiva do jogador, a tela mostra 2 músicas, e terá que escolher uma da
 ## Termos
 
 - **Round** é ter que escolher UMA música entre duas.
-- **Jogo** equivale a todo o processo, ou seja, os 32 rounds.
+- **Jogo** equivale a todo o processo, ou seja, todos os rounds até sobrar uma. Cada round elimina uma música, então 32 músicas = 31 rounds.
 
 ## Mecânicas
 
-- Jogos curtos ou extensos (8, 16, 32, 64 rounds).
+- Jogos curtos ou extensos (8, 16, 32, 64 músicas).
 - Jogos por gênero de música.
 - Possibilidade de adicionar novas músicas manualmente.
+- A música que sobra ganha +1 vitória no banco.
+- Se a página for recarregada no meio do jogo, o progresso é perdido.
 
 ## De que forma é feita a seleção das músicas?
 

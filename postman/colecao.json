@@ -1,0 +1,628 @@
+{
+  "info": {
+    "name": "Salve Uma Música",
+    "description": "Rode as pastas na ordem (1 a 4). Algumas requisições salvam ids em variáveis pras próximas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "admin",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "secret",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "deezer_url",
+      "value": "https://api.deezer.com"
+    },
+    {
+      "key": "id_genero",
+      "value": "152"
+    },
+    {
+      "key": "nome_genero",
+      "value": "Rock"
+    },
+    {
+      "key": "id_deezer",
+      "value": "518458172"
+    },
+    {
+      "key": "id_artista",
+      "value": "663"
+    },
+    {
+      "key": "id_manual",
+      "value": ""
+    },
+    {
+      "key": "titulo_json",
+      "value": "\"Sweet Child O' Mine\""
+    },
+    {
+      "key": "nome_artista_json",
+      "value": "\"Guns N' Roses\""
+    },
+    {
+      "key": "duracao",
+      "value": "355"
+    },
+    {
+      "key": "url_capa_json",
+      "value": "\"https://cdn-images.dzcdn.net/images/cover/8bfe7b3b0985d9ff0751090fb2b6f73f/250x250-000000-80-0-0.jpg\""
+    },
+    {
+      "key": "url_foto_json",
+      "value": "\"https://cdn-images.dzcdn.net/images/artist/c62989722e38d7a2ab18afde3c19bc5c/250x250-000000-80-0-0.jpg\""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Deezer (fonte, somente leitura)",
+      "auth": {
+        "type": "noauth"
+      },
+      "item": [
+        {
+          "name": "GET Gêneros",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retorna lista de gêneros', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{deezer_url}}/genre"
+          }
+        },
+        {
+          "name": "GET Músicas em alta do gênero",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const faixas = pm.response.json().data;",
+                  "pm.test('Retorna faixas', () => pm.expect(faixas.length).to.be.above(0));",
+                  "const f = faixas[0];",
+                  "pm.collectionVariables.set('id_deezer', f.id);",
+                  "pm.collectionVariables.set('id_artista', f.artist.id);",
+                  "pm.collectionVariables.set('titulo_json', JSON.stringify(f.title));",
+                  "pm.collectionVariables.set('nome_artista_json', JSON.stringify(f.artist.name));",
+                  "pm.collectionVariables.set('duracao', f.duration);",
+                  "pm.collectionVariables.set('url_capa_json', JSON.stringify(f.album.cover_medium));",
+                  "pm.collectionVariables.set('url_foto_json', JSON.stringify(f.artist.picture_medium));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{deezer_url}}/chart/{{id_genero}}/tracks?limit=100",
+              "host": [
+                "{{deezer_url}}"
+              ],
+              "path": [
+                "chart",
+                "{{id_genero}}",
+                "tracks"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Faixa por id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{deezer_url}}/track/{{id_deezer}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Banco - criar coleções",
+      "item": [
+        {
+          "name": "PUT Criar coleção musica",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 ou 200', () => pm.expect(pm.response.code).to.be.oneOf([201, 200]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/musica"
+          }
+        },
+        {
+          "name": "PUT Criar coleção artista",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 ou 200', () => pm.expect(pm.response.code).to.be.oneOf([201, 200]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/artista"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Banco - musica",
+      "item": [
+        {
+          "name": "POST Inserir música importada (_id do Deezer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 ou 409', () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"_id\": {{id_deezer}},\n  \"titulo\": {{titulo_json}},\n  \"artista\": {\n    \"id_artista\": {{id_artista}},\n    \"nome_artista\": {{nome_artista_json}}\n  },\n  \"duracao\": {{duracao}},\n  \"adicionado_manualmente\": false,\n  \"url_capa\": {{url_capa_json}},\n  \"genero\": \"{{nome_genero}}\",\n  \"vitorias\": 0,\n  \"criado_em\": \"{{$isoTimestamp}}\"\n}"
+            },
+            "url": "{{base_url}}/musica"
+          }
+        },
+        {
+          "name": "POST Inserir música manual",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const location = pm.response.headers.get('Location');",
+                  "pm.test('Cabeçalho Location presente', () => pm.expect(location).to.be.a('string'));",
+                  "pm.collectionVariables.set('id_manual', location.split('/').pop());"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Música de Teste\",\n  \"artista\": {\n    \"id_artista\": null,\n    \"nome_artista\": \"Banda de Teste\"\n  },\n  \"duracao\": 200,\n  \"adicionado_manualmente\": true,\n  \"url_capa\": null,\n  \"genero\": \"Rock\",\n  \"vitorias\": 0,\n  \"criado_em\": \"{{$isoTimestamp}}\"\n}"
+            },
+            "url": "{{base_url}}/musica"
+          }
+        },
+        {
+          "name": "GET Listar músicas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retorna uma lista', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/musica?pagesize=100",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "musica"
+              ],
+              "query": [
+                {
+                  "key": "pagesize",
+                  "value": "100"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Listar músicas de um gênero (filter)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Todas são do gênero Rock', () => pm.response.json().forEach(m => pm.expect(m.genero).to.eql('Rock')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/musica?filter={\"genero\":\"Rock\"}&pagesize=100",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "musica"
+              ],
+              "query": [
+                {
+                  "key": "filter",
+                  "value": "{\"genero\":\"Rock\"}"
+                },
+                {
+                  "key": "pagesize",
+                  "value": "100"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Buscar música manual por id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('É a música criada', () => pm.expect(pm.response.json().titulo).to.eql('Música de Teste'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/musica/{{id_manual}}"
+          }
+        },
+        {
+          "name": "GET Buscar música importada por id (_id numérico)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/musica/{{id_deezer}}?id_type=NUMBER",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "musica",
+                "{{id_deezer}}"
+              ],
+              "query": [
+                {
+                  "key": "id_type",
+                  "value": "NUMBER"
+                }
+              ]
+            },
+            "description": "Sem o ?id_type=NUMBER o RESTHeart não acha o _id numérico."
+          }
+        },
+        {
+          "name": "PUT Substituir música manual",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Música de Teste (editada)\",\n  \"artista\": {\n    \"id_artista\": null,\n    \"nome_artista\": \"Banda de Teste\"\n  },\n  \"duracao\": 210,\n  \"adicionado_manualmente\": true,\n  \"url_capa\": null,\n  \"genero\": \"Rock\",\n  \"vitorias\": 0,\n  \"criado_em\": \"{{$isoTimestamp}}\",\n  \"atualizado_em\": \"{{$isoTimestamp}}\"\n}"
+            },
+            "url": "{{base_url}}/musica/{{id_manual}}"
+          }
+        },
+        {
+          "name": "PATCH Somar uma vitória ($inc)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"$inc\": { \"vitorias\": 1 },\n  \"$set\": { \"atualizado_em\": \"{{$isoTimestamp}}\" }\n}"
+            },
+            "url": "{{base_url}}/musica/{{id_manual}}"
+          }
+        },
+        {
+          "name": "GET Conferir vitória somada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('vitorias = 1', () => pm.expect(pm.response.json().vitorias).to.eql(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/musica/{{id_manual}}"
+          }
+        },
+        {
+          "name": "PATCH Zerar vitórias",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vitorias\": 0,\n  \"atualizado_em\": \"{{$isoTimestamp}}\"\n}"
+            },
+            "url": "{{base_url}}/musica/{{id_manual}}"
+          }
+        },
+        {
+          "name": "DELETE Excluir música manual",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/musica/{{id_manual}}"
+          }
+        },
+        {
+          "name": "GET Música excluída (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/musica/{{id_manual}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Banco - artista",
+      "item": [
+        {
+          "name": "POST Inserir artista",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 ou 409', () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"_id\": {{id_artista}},\n  \"nome\": {{nome_artista_json}},\n  \"url_foto\": {{url_foto_json}}\n}"
+            },
+            "url": "{{base_url}}/artista"
+          }
+        },
+        {
+          "name": "GET Listar artistas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/artista?pagesize=100",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "artista"
+              ],
+              "query": [
+                {
+                  "key": "pagesize",
+                  "value": "100"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Buscar artista por id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/artista/{{id_artista}}?id_type=NUMBER",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "artista",
+                "{{id_artista}}"
+              ],
+              "query": [
+                {
+                  "key": "id_type",
+                  "value": "NUMBER"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
