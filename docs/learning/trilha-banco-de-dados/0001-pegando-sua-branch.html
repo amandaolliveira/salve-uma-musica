@@ -46,11 +46,12 @@ git config --global user.email "the-email-of-your-github-account"</pre>
 </div>
 
 <h2>5. The cycle you will use in lesson 5</h2>
-<pre>git status                      what changed?
-git add docs/estrutura_banco.md  choose what goes in the next commit
-git commit -m "message"         save a snapshot, with a message
-git push                        send your commits to GitHub (your branch)
-git pull                        bring the newest commits of your branch</pre>
+<pre>git branch                        am I on banco-de-dados?
+git status                        what changed?
+git add docs/estrutura_banco.md   choose what goes in the next commit
+git commit -m "message"           save a snapshot, with a message
+git push origin banco-de-dados    send your commits to YOUR branch on GitHub
+git pull origin banco-de-dados    bring the newest commits of your branch</pre>
 <p>(<a href="https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository">Pro Git: recording changes</a>) The first <code>git push</code> opens a browser window to log into GitHub. To push, your GitHub account must be a collaborator of the repository; the repository owner adds you in <i>Settings → Collaborators</i>.</p>
 
 <h2>6. Two rules</h2>
@@ -86,9 +87,9 @@ git pull                        bring the newest commits of your branch</pre>
 <button>git branch, and look for the asterisk</button>
 <div class="fb"></div></div>
 
-<div class="quiz" data-answer="0" data-why="commit saves locally; push is what sends the commits to GitHub.">
+<div class="quiz" data-answer="0" data-why="commit saves locally; push is what sends the commits to GitHub, to your branch banco-de-dados.">
 <p>You committed, but your colleagues do not see it on GitHub. What is missing?</p>
-<button>git push</button>
+<button>git push origin banco-de-dados</button>
 <button>git add</button>
 <button>git status</button>
 <button>git checkout</button>
@@ -132,11 +133,12 @@ git config --global user.email "o-email-da-sua-conta-do-github"</pre>
 </div>
 
 <h2>5. O ciclo que você vai usar na aula 5</h2>
-<pre>git status                      o que mudou?
-git add docs/estrutura_banco.md  escolha o que vai no próximo commit
-git commit -m "mensagem"        salve uma versão, com uma mensagem
-git push                        envie seus commits para o GitHub (sua branch)
-git pull                        traga os commits mais novos da sua branch</pre>
+<pre>git branch                        estou na banco-de-dados?
+git status                        o que mudou?
+git add docs/estrutura_banco.md   escolha o que vai no próximo commit
+git commit -m "mensagem"          salve uma versão, com uma mensagem
+git push origin banco-de-dados    envie seus commits para a SUA branch no GitHub
+git pull origin banco-de-dados    traga os commits mais novos da sua branch</pre>
 <p>(<a href="https://git-scm.com/book/pt-br/v2/Fundamentos-do-Git-Gravando-Altera%c3%a7%c3%b5es-no-Reposit%c3%b3rio">Pro Git: gravando alterações</a>) O primeiro <code>git push</code> abre uma janela do navegador para entrar no GitHub. Para conseguir enviar, a sua conta do GitHub precisa ser colaboradora do repositório; quem é dono do repositório adiciona você em <i>Settings → Collaborators</i>.</p>
 
 <h2>6. Duas regras</h2>
@@ -172,9 +174,9 @@ git pull                        traga os commits mais novos da sua branch</pre>
 <button>git branch, e procurar o asterisco</button>
 <div class="fb"></div></div>
 
-<div class="quiz" data-answer="0" data-why="O commit salva só no seu computador; é o push que envia os commits para o GitHub.">
+<div class="quiz" data-answer="0" data-why="O commit salva só no seu computador; é o push que envia os commits para o GitHub, na sua branch banco-de-dados.">
 <p>Você fez commit, mas os colegas não veem no GitHub. O que falta?</p>
-<button>git push</button>
+<button>git push origin banco-de-dados</button>
 <button>git add</button>
 <button>git status</button>
 <button>git checkout</button>
