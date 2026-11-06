@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Database 5: Documenting the model</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Database 5: Documenting the model</h1>
+<p class="lede">Win: add two sections, in your own words, to <code>docs/estrutura_banco.md</code> (in Portuguese, like the rest of that file), then commit and push them to your branch. These are the sections the professor's "NoSQL modelling" criterion looks for.</p>
+
+<h2>1. What the assignment checks</h2>
+<table>
+<tr><th>Requirement</th><th>Where it is met</th></tr>
+<tr><td>1 collection with 30+ documents imported from the API</td><td><code>musica</code>, after one import (lesson 4 count)</td></tr>
+<tr><td>6+ fields, including 1 number, 1 date, 1 embedded object or list</td><td><code>duracao</code> / <code>vitorias</code> (numbers), <code>criado_em</code> (date), <code>artista</code> (embedded object)</td></tr>
+<tr><td>Fields created by the group</td><td><code>adicionado_manualmente</code>, <code>genero</code>, <code>vitorias</code>, <code>criado_em</code>, <code>atualizado_em</code></td></tr>
+<tr><td>Justification of what is embedded and what is referenced</td><td><b>Your section "Justificativa"</b></td></tr>
+</table>
+
+<h2>2. Write the "Justificativa" section</h2>
+<div class="task">
+<p>Open <code>docs/estrutura_banco.md</code> in a text editor (VS Code, or Notepad). At the end, add a heading <code>## Justificativa</code> and answer, in a few short sentences:</p>
+<ol>
+<li>What is embedded in <code>musica</code>, and why? (lesson 2, section 4)</li>
+<li>What is referenced, and why?</li>
+<li>What is the cost of that choice?</li>
+<li>Why is the <code>_id</code> of an imported song the Deezer id? (hint: what happens on the second import)</li>
+</ol>
+</div>
+
+<h2>3. Write the "Verificação" section</h2>
+<div class="task">
+<p>Below it, add <code>## Verificação</code> with what you noted in lesson 4: the date, the totals of <code>musica</code> and <code>artista</code>, the genres imported, one filter you ran with its result, and the fields of one document showing the number, the date and the embedded object.</p>
+</div>
+
+<details><summary>Answer key: an example (write yours in your own words, with your numbers)</summary>
+<pre>## Justificativa
+
+O nome do artista fica **embutido** na música (`artista.nome_artista`), porque ele aparece
+em toda listagem e em todo round do jogo. Assim uma leitura traz tudo, sem precisar de JOIN.
+
+O resto do artista (a foto) fica na coleção `artista`, **referenciado** pelo `id_artista`.
+Um artista tem várias músicas e a foto não é usada pelas telas, então não vale copiar em cada música.
+
+O custo: se um artista mudar de nome, todas as músicas dele precisam ser atualizadas.
+Como isso é raro, vale a pena.
+
+O `_id` das músicas importadas é o id do Deezer. Assim, importar o mesmo gênero de novo
+não duplica nada: o RESTHeart responde 409 e a música é ignorada.
+
+## Verificação
+
+Conferido no MongoDB Compass em 07/11/2026 (banco `restheart`):
+
+- `musica`: 100 documentos (1 gênero importado: Rock)
+- `artista`: 71 documentos
+- Filtro `{ vitorias: { $gt: 0 } }`: 2 documentos, depois de 2 partidas
+- Um documento tem `duracao` e `vitorias` (números), `criado_em` (data) e `artista` (objeto embutido)</pre>
+<p class="note">The numbers above are only an example. Use the ones you saw.</p>
+</details>
+
+<h2>4. Commit and push</h2>
+<div class="task">
+<pre>git branch                         the asterisk must be on banco-de-dados
+git status                         shows: modified: docs/estrutura_banco.md
+git add docs/estrutura_banco.md
+git commit -m "docs: justificativa e verificação do modelo"
+git push</pre>
+<p>Then open the repository on GitHub, switch the branch selector to <code>banco-de-dados</code>, and open <code>docs/estrutura_banco.md</code>: your sections must be there. That commit, with your name, is your proof of participation.</p>
+<p class="note">If <code>git push</code> says <code>rejected ... fetch first</code>, someone pushed to your branch before you. Run <code>git pull</code>, then <code>git push</code> again.</p>
+</div>
+
+<h2>5. Check yourself</h2>
+<div class="quiz" data-answer="3" data-why="criado_em is the date; duracao and vitorias are numbers; artista is the embedded object.">
+<p>Which field covers the "1 date" requirement?</p>
+<button>duracao</button>
+<button>vitorias</button>
+<button>artista</button>
+<button>criado_em</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="1" data-why="Using Deezer's id as _id makes a second POST of the same song fail with 409, so nothing is duplicated.">
+<p>Why does importing the same genre twice not duplicate songs?</p>
+<button>The app deletes the old songs first</button>
+<button>The _id is the Deezer id, so the repeat gets 409</button>
+<button>MongoDB merges equal documents</button>
+<button>Compass removes duplicates</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="git add chooses the file, commit saves it locally, push sends it to GitHub.">
+<p>What is the right order?</p>
+<button>git add, git commit, git push</button>
+<button>git push, git add, git commit</button>
+<button>git commit, git push, git add</button>
+<button>git add, git push, git commit</button>
+<div class="fb"></div></div>
+
+<p>Track finished. When the frontend colleague also finishes, the group merges the branches and all three do <a href="../base/0005-presentation-rehearsal.html">base lesson 5</a>.</p>
+</section>
+
+<section lang="pt-BR">
+<h1>Banco 5: Documentando o modelo</h1>
+<p class="lede">Objetivo: acrescentar duas seções, com as suas palavras, no <code>docs/estrutura_banco.md</code>, e depois fazer commit e push delas na sua branch. São as seções que o critério "Modelagem NoSQL" do professor procura.</p>
+
+<h2>1. O que o trabalho confere</h2>
+<table>
+<tr><th>Requisito</th><th>Onde é cumprido</th></tr>
+<tr><td>1 coleção com 30+ documentos importados da API</td><td><code>musica</code>, depois de uma importação (contagem da aula 4)</td></tr>
+<tr><td>6+ campos, incluindo 1 número, 1 data, 1 objeto ou lista embutida</td><td><code>duracao</code> / <code>vitorias</code> (números), <code>criado_em</code> (data), <code>artista</code> (objeto embutido)</td></tr>
+<tr><td>Campos criados pelo grupo</td><td><code>adicionado_manualmente</code>, <code>genero</code>, <code>vitorias</code>, <code>criado_em</code>, <code>atualizado_em</code></td></tr>
+<tr><td>Justificativa do que foi embutido e do que foi referenciado</td><td><b>A sua seção "Justificativa"</b></td></tr>
+</table>
+
+<h2>2. Escreva a seção "Justificativa"</h2>
+<div class="task">
+<p>Abra o <code>docs/estrutura_banco.md</code> em um editor de texto (VS Code, ou o Bloco de Notas). No fim, acrescente um título <code>## Justificativa</code> e responda, em poucas frases curtas:</p>
+<ol>
+<li>O que está embutido na <code>musica</code>, e por quê? (aula 2, seção 4)</li>
+<li>O que está referenciado, e por quê?</li>
+<li>Qual é o custo dessa escolha?</li>
+<li>Por que o <code>_id</code> de uma música importada é o id do Deezer? (dica: o que acontece na segunda importação)</li>
+</ol>
+</div>
+
+<h2>3. Escreva a seção "Verificação"</h2>
+<div class="task">
+<p>Abaixo dela, acrescente <code>## Verificação</code> com o que você anotou na aula 4: a data, os totais da <code>musica</code> e da <code>artista</code>, os gêneros importados, um filtro que você rodou com o resultado, e os campos de um documento mostrando o número, a data e o objeto embutido.</p>
+</div>
+
+<details><summary>Gabarito: um exemplo (escreva o seu com as suas palavras e os seus números)</summary>
+<pre>## Justificativa
+
+O nome do artista fica **embutido** na música (`artista.nome_artista`), porque ele aparece
+em toda listagem e em todo round do jogo. Assim uma leitura traz tudo, sem precisar de JOIN.
+
+O resto do artista (a foto) fica na coleção `artista`, **referenciado** pelo `id_artista`.
+Um artista tem várias músicas e a foto não é usada pelas telas, então não vale copiar em cada música.
+
+O custo: se um artista mudar de nome, todas as músicas dele precisam ser atualizadas.
+Como isso é raro, vale a pena.
+
+O `_id` das músicas importadas é o id do Deezer. Assim, importar o mesmo gênero de novo
+não duplica nada: o RESTHeart responde 409 e a música é ignorada.
+
+## Verificação
+
+Conferido no MongoDB Compass em 07/11/2026 (banco `restheart`):
+
+- `musica`: 100 documentos (1 gênero importado: Rock)
+- `artista`: 71 documentos
+- Filtro `{ vitorias: { $gt: 0 } }`: 2 documentos, depois de 2 partidas
+- Um documento tem `duracao` e `vitorias` (números), `criado_em` (data) e `artista` (objeto embutido)</pre>
+<p class="note">Os números acima são só um exemplo. Use os que você viu.</p>
+</details>
+
+<h2>4. Commit e push</h2>
+<div class="task">
+<pre>git branch                         o asterisco precisa estar na banco-de-dados
+git status                         mostra: modified: docs/estrutura_banco.md
+git add docs/estrutura_banco.md
+git commit -m "docs: justificativa e verificação do modelo"
+git push</pre>
+<p>Depois abra o repositório no GitHub, troque o seletor de branch para <code>banco-de-dados</code> e abra o <code>docs/estrutura_banco.md</code>: as suas seções precisam estar lá. Esse commit, com o seu nome, é a sua prova de participação.</p>
+<p class="note">Se o <code>git push</code> disser <code>rejected ... fetch first</code>, alguém enviou algo para a sua branch antes. Rode <code>git pull</code> e depois <code>git push</code> de novo.</p>
+</div>
+
+<h2>5. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="3" data-why="criado_em é a data; duracao e vitorias são números; artista é o objeto embutido.">
+<p>Qual campo cumpre o requisito "1 data"?</p>
+<button>duracao</button>
+<button>vitorias</button>
+<button>artista</button>
+<button>criado_em</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="1" data-why="Usar o id do Deezer como _id faz um segundo POST da mesma música falhar com 409, então nada duplica.">
+<p>Por que importar o mesmo gênero duas vezes não duplica músicas?</p>
+<button>O app apaga as músicas antigas antes</button>
+<button>O _id é o id do Deezer, então a repetição recebe 409</button>
+<button>O MongoDB junta documentos iguais</button>
+<button>O Compass remove os duplicados</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="O git add escolhe o arquivo, o commit salva no seu computador, o push envia para o GitHub.">
+<p>Qual é a ordem certa?</p>
+<button>git add, git commit, git push</button>
+<button>git push, git add, git commit</button>
+<button>git commit, git push, git add</button>
+<button>git add, git push, git commit</button>
+<div class="fb"></div></div>
+
+<p>Trilha concluída. Quando o colega do frontend também terminar, o grupo mescla as branches e os três fazem a <a href="../base/0005-presentation-rehearsal.html">aula base 5</a>.</p>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Database 3: The database in Docker</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Database 3: The database in Docker</h1>
+<p class="lede">Win: explain every line of the <code>mongodb</code> and <code>restheart</code> services in <code>docker-compose.yml</code>, and prove with a count that the data survives <code>down</code> but not <code>down -v</code>. In the assignment, "database in Docker" is your role.</p>
+
+<h2>1. The two services, line by line</h2>
+<p>(<a href="https://docs.docker.com/reference/compose-file/services/">Docker docs: services</a>)</p>
+<pre>services:
+  mongodb:
+    image: mongo:7                 # official MongoDB image, version 7
+    restart: unless-stopped        # restarts by itself if it crashes
+    ports:
+      - "27017:27017"              # your computer : container. Only Compass uses it;
+                                   # the app talks to RESTHeart, not to MongoDB directly
+    volumes:
+      - dados-mongo:/data/db       # named volume mounted where MongoDB writes its files
+
+  restheart:
+    image: softinstigate/restheart:8
+    depends_on:
+      - mongodb                    # start MongoDB first
+    environment:
+      RHO: '/mclient/connection-string->"mongodb://mongodb:27017";/http-listener/host->"0.0.0.0"'
+    ports:
+      - "8080:8080"                # the HTTP API the app and Postman call
+
+volumes:
+  dados-mongo:                     # declares the named volume</pre>
+<p>Two things in <code>RHO</code> (RESTHeart's settings in one line):</p>
+<ul>
+<li><code>mongodb://mongodb:27017</code>: the second <code>mongodb</code> is the <b>service name</b>. Inside Docker's network each service is reachable by its name, like a hostname.</li>
+<li><code>http-listener/host-&gt;"0.0.0.0"</code>: accept connections from outside the container, otherwise <code>localhost:8080</code> on your computer would not answer.</li>
+</ul>
+<p>RESTHeart keeps everything in a database called <code>restheart</code> (its default). <code>/musica</code> in a URL is the collection <code>musica</code> of that database.</p>
+
+<h2>2. The named volume</h2>
+<p>A container's own files disappear when the container is removed. A <b>named volume</b> is storage managed by Docker that outlives the containers (<a href="https://docs.docker.com/engine/storage/volumes/">Docker docs: volumes</a>). Compose puts the project name in front of it, so on your machine it is called <code>salve-uma-musica_dados-mongo</code>.</p>
+<table>
+<tr><th>Command</th><th>Containers</th><th>Volume (your data)</th></tr>
+<tr><td><code>docker compose down</code></td><td>removed</td><td>kept</td></tr>
+<tr><td><code>docker compose down -v</code></td><td>removed</td><td><b>deleted</b></td></tr>
+</table>
+
+<h2>3. Try it</h2>
+<div class="task">
+<ol>
+<li>In the repo folder: <code>docker compose up -d</code>, then <code>docker compose ps</code>. Three services must be running.</li>
+<li>Open <a href="http://localhost:3000">http://localhost:3000</a>, go to <b>Importar</b>, choose a genre, click <b>Importar</b>. Wait for the green message.</li>
+<li>See the volume: <code>docker volume ls</code>. Expected line: <code>local     salve-uma-musica_dados-mongo</code>.</li>
+<li>Count the songs from inside the MongoDB container:
+<pre>docker compose exec mongodb mongosh --quiet --eval "db.getSiblingDB('restheart').musica.countDocuments()"</pre>
+Expected: a number like <code>100</code>. Write it down.</li>
+<li><code>docker compose down</code>, then <code>docker compose up -d</code>, and run the count again. Same number: the volume kept the data.</li>
+</ol>
+<p class="note">Do <b>not</b> run <code>down -v</code> now unless you want to import again. If you do, the count command answers <code>0</code> afterwards (the page recreates the collections when you open it).</p>
+</div>
+
+<h2>4. If something goes wrong</h2>
+<table>
+<tr><th>Message</th><th>What to do</th></tr>
+<tr><td><code>port is already allocated</code> for 27017</td><td>Another MongoDB is running on your computer. Close it, or change the left number (e.g. <code>"27018:27017"</code>) and use that port in Compass.</td></tr>
+<tr><td><code>service "mongodb" is not running</code></td><td>Run <code>docker compose up -d</code> first.</td></tr>
+<tr><td><code>error during connect</code> or <code>Cannot connect to the Docker daemon</code></td><td>Docker Desktop is closed. Open it and wait until it says it is running.</td></tr>
+</table>
+
+<h2>5. Check yourself</h2>
+<div class="quiz" data-answer="1" data-why="Inside Docker's network a service is reached by its name, so mongodb is the hostname.">
+<p>In <code>mongodb://mongodb:27017</code>, what is the second <code>mongodb</code>?</p>
+<button>The name of the database</button>
+<button>The name of the service, used as a hostname</button>
+<button>The user that logs into MongoDB</button>
+<button>The name of the named volume</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="The app calls RESTHeart on 8080; 27017 is only opened for tools like Compass.">
+<p>Who uses port 27017 on your computer?</p>
+<button>The app in the browser</button>
+<button>Postman</button>
+<button>RESTHeart, from your computer</button>
+<button>Only MongoDB Compass</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="down keeps named volumes; -v deletes them.">
+<p>Which command keeps the imported songs?</p>
+<button>docker compose down</button>
+<button>docker compose down -v</button>
+<button>docker volume rm salve-uma-musica_dados-mongo</button>
+<button>None, songs are always lost</button>
+<div class="fb"></div></div>
+</section>
+
+<section lang="pt-BR">
+<h1>Banco 3: O banco no Docker</h1>
+<p class="lede">Objetivo: explicar cada linha dos serviços <code>mongodb</code> e <code>restheart</code> do <code>docker-compose.yml</code>, e provar com uma contagem que os dados sobrevivem ao <code>down</code>, mas não ao <code>down -v</code>. No trabalho, "banco no Docker" é o seu papel.</p>
+
+<h2>1. Os dois serviços, linha por linha</h2>
+<p>(<a href="https://docs.docker.com/reference/compose-file/services/">Documentação do Docker: services</a>, em inglês)</p>
+<pre>services:
+  mongodb:
+    image: mongo:7                 # imagem oficial do MongoDB, versão 7
+    restart: unless-stopped        # reinicia sozinho se cair
+    ports:
+      - "27017:27017"              # seu computador : contêiner. Só o Compass usa;
+                                   # o app fala com o RESTHeart, não direto com o MongoDB
+    volumes:
+      - dados-mongo:/data/db       # volume nomeado montado onde o MongoDB grava os arquivos
+
+  restheart:
+    image: softinstigate/restheart:8
+    depends_on:
+      - mongodb                    # suba o MongoDB primeiro
+    environment:
+      RHO: '/mclient/connection-string->"mongodb://mongodb:27017";/http-listener/host->"0.0.0.0"'
+    ports:
+      - "8080:8080"                # a API HTTP que o app e o Postman chamam
+
+volumes:
+  dados-mongo:                     # declara o volume nomeado</pre>
+<p>Duas coisas no <code>RHO</code> (as configurações do RESTHeart em uma linha):</p>
+<ul>
+<li><code>mongodb://mongodb:27017</code>: o segundo <code>mongodb</code> é o <b>nome do serviço</b>. Dentro da rede do Docker, cada serviço é encontrado pelo nome, como um endereço.</li>
+<li><code>http-listener/host-&gt;"0.0.0.0"</code>: aceitar conexões de fora do contêiner; sem isso, o <code>localhost:8080</code> do seu computador não responderia.</li>
+</ul>
+<p>O RESTHeart guarda tudo em um banco chamado <code>restheart</code> (o padrão dele). O <code>/musica</code> de uma URL é a coleção <code>musica</code> desse banco.</p>
+
+<h2>2. O volume nomeado</h2>
+<p>Os arquivos de dentro de um contêiner somem quando ele é removido. Um <b>volume nomeado</b> é um armazenamento gerenciado pelo Docker que dura mais que os contêineres (<a href="https://docs.docker.com/engine/storage/volumes/">Documentação do Docker: volumes</a>, em inglês). O Compose coloca o nome do projeto na frente, então no seu computador ele se chama <code>salve-uma-musica_dados-mongo</code>.</p>
+<table>
+<tr><th>Comando</th><th>Contêineres</th><th>Volume (seus dados)</th></tr>
+<tr><td><code>docker compose down</code></td><td>removidos</td><td>mantido</td></tr>
+<tr><td><code>docker compose down -v</code></td><td>removidos</td><td><b>apagado</b></td></tr>
+</table>
+
+<h2>3. Experimente</h2>
+<div class="task">
+<ol>
+<li>Na pasta do repositório: <code>docker compose up -d</code> e depois <code>docker compose ps</code>. Três serviços precisam estar rodando.</li>
+<li>Abra <a href="http://localhost:3000">http://localhost:3000</a>, vá em <b>Importar</b>, escolha um gênero e clique em <b>Importar</b>. Espere a mensagem verde.</li>
+<li>Veja o volume: <code>docker volume ls</code>. Linha esperada: <code>local     salve-uma-musica_dados-mongo</code>.</li>
+<li>Conte as músicas de dentro do contêiner do MongoDB:
+<pre>docker compose exec mongodb mongosh --quiet --eval "db.getSiblingDB('restheart').musica.countDocuments()"</pre>
+Esperado: um número como <code>100</code>. Anote.</li>
+<li><code>docker compose down</code>, depois <code>docker compose up -d</code>, e rode a contagem de novo. Mesmo número: o volume guardou os dados.</li>
+</ol>
+<p class="note"><b>Não</b> rode <code>down -v</code> agora, a não ser que queira importar de novo. Se rodar, a contagem responde <code>0</code> depois (a página recria as coleções quando você a abre).</p>
+</div>
+
+<h2>4. Se algo der errado</h2>
+<table>
+<tr><th>Mensagem</th><th>O que fazer</th></tr>
+<tr><td><code>port is already allocated</code> na 27017</td><td>Outro MongoDB está rodando no seu computador. Feche-o, ou troque o número da esquerda (ex.: <code>"27018:27017"</code>) e use essa porta no Compass.</td></tr>
+<tr><td><code>service "mongodb" is not running</code></td><td>Rode <code>docker compose up -d</code> antes.</td></tr>
+<tr><td><code>error during connect</code> ou <code>Cannot connect to the Docker daemon</code></td><td>O Docker Desktop está fechado. Abra e espere ele dizer que está rodando.</td></tr>
+</table>
+
+<h2>5. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="1" data-why="Dentro da rede do Docker um serviço é encontrado pelo nome, então mongodb é o endereço.">
+<p>Em <code>mongodb://mongodb:27017</code>, o que é o segundo <code>mongodb</code>?</p>
+<button>O nome do banco</button>
+<button>O nome do serviço, usado como endereço</button>
+<button>O usuário que entra no MongoDB</button>
+<button>O nome do volume nomeado</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="O app chama o RESTHeart na 8080; a 27017 só fica aberta para ferramentas como o Compass.">
+<p>Quem usa a porta 27017 no seu computador?</p>
+<button>O app no navegador</button>
+<button>O Postman</button>
+<button>O RESTHeart, a partir do seu computador</button>
+<button>Só o MongoDB Compass</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="O down mantém os volumes nomeados; o -v apaga.">
+<p>Qual comando mantém as músicas importadas?</p>
+<button>docker compose down</button>
+<button>docker compose down -v</button>
+<button>docker volume rm salve-uma-musica_dados-mongo</button>
+<button>Nenhum, as músicas sempre se perdem</button>
+<div class="fb"></div></div>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Database 1: Getting your branch</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Database 1: Getting your branch</h1>
+<p class="lede">Win: have the project on your computer, on the branch <code>banco-de-dados</code>, with Git knowing who you are. Your commits in this track go to this branch only; the group merges it into <code>master</code> later.</p>
+
+<h2>1. What is a branch?</h2>
+<p>A branch is a separate line of commits. <code>master</code> has the project as it is today. <code>banco-de-dados</code> starts as a copy of it, and receives only your changes, so you and the frontend colleague never step on each other. Later the branches are <b>merged</b> back into <code>master</code>.
+(<a href="https://git-scm.com/book/en/v2/Git-Branching-Remote-Branches">Pro Git: remote branches</a>)</p>
+
+<h2>2. Install and check</h2>
+<div class="task">
+<p>You need <a href="https://git-scm.com/downloads">Git</a> and Docker Desktop. Open a terminal (PowerShell on Windows) and check:</p>
+<pre>git --version
+docker --version</pre>
+<p>Both should print a version number.</p>
+</div>
+
+<h2>3. Get the project and switch to your branch</h2>
+<div class="task">
+<p>If you do <b>not</b> have the repository yet:</p>
+<pre>git clone https://github.com/amandaolliveira/salve-uma-musica.git
+cd salve-uma-musica</pre>
+<p>If you already have it, go into its folder and download what is new:</p>
+<pre>git fetch</pre>
+<p>Then, in both cases:</p>
+<pre>git checkout banco-de-dados
+git branch</pre>
+<p>Expected: <code>branch 'banco-de-dados' set up to track 'origin/banco-de-dados'</code> (or <code>Switched to branch</code>), and <code>git branch</code> shows <code>* banco-de-dados</code>. The asterisk marks the branch you are on.</p>
+</div>
+
+<h2>4. Tell Git who you are (once per computer)</h2>
+<div class="task">
+<pre>git config --global user.name "Your Name"
+git config --global user.email "the-email-of-your-github-account"</pre>
+<p>Every commit carries this name and email. The assignment checks that every member has commits, so use the email of your GitHub account.</p>
+</div>
+
+<h2>5. The cycle you will use in lesson 5</h2>
+<pre>git status                      what changed?
+git add docs/estrutura_banco.md  choose what goes in the next commit
+git commit -m "message"         save a snapshot, with a message
+git push                        send your commits to GitHub (your branch)
+git pull                        bring the newest commits of your branch</pre>
+<p>(<a href="https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository">Pro Git: recording changes</a>) The first <code>git push</code> opens a browser window to log into GitHub. To push, your GitHub account must be a collaborator of the repository; the repository owner adds you in <i>Settings → Collaborators</i>.</p>
+
+<h2>6. Two rules</h2>
+<ul>
+<li>Before working, run <code>git branch</code> and confirm the asterisk is on <code>banco-de-dados</code>. Never commit on <code>master</code>.</li>
+<li>Do not merge anything yourself. The group merges the branches together, at the end.</li>
+</ul>
+
+<h2>7. If something goes wrong</h2>
+<table>
+<tr><th>Message</th><th>What to do</th></tr>
+<tr><td><code>pathspec 'banco-de-dados' did not match</code></td><td>Run <code>git fetch</code> and try again. If it still fails, the branch was not pushed to GitHub yet: ask the backend colleague to push it.</td></tr>
+<tr><td><code>Please tell me who you are</code></td><td>Do section 4.</td></tr>
+<tr><td><code>Permission denied</code> or <code>403</code> on push</td><td>Your GitHub account is not a collaborator yet. Ask the repository owner.</td></tr>
+<tr><td><code>Your local changes would be overwritten</code> on checkout</td><td>You changed files on another branch. Run <code>git status</code>; to throw those changes away, <code>git restore .</code></td></tr>
+</table>
+<p>To open these lessons at any time: open the file <code>docs/learning/index.html</code> of the repository in the browser (double-click it).</p>
+
+<h2>8. Check yourself</h2>
+<div class="quiz" data-answer="1" data-why="Each member works on a separate branch, and the group merges them at the end.">
+<p>Why does each member have a separate branch?</p>
+<button>GitHub allows only one person per branch</button>
+<button>So changes do not collide until the merge</button>
+<button>Because master is read-only on GitHub</button>
+<button>To keep the project folder smaller</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="git branch lists the branches and marks the current one with *.">
+<p>How do you check which branch you are on?</p>
+<button>git log</button>
+<button>git push</button>
+<button>git fetch</button>
+<button>git branch, and look for the asterisk</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="commit saves locally; push is what sends the commits to GitHub.">
+<p>You committed, but your colleagues do not see it on GitHub. What is missing?</p>
+<button>git push</button>
+<button>git add</button>
+<button>git status</button>
+<button>git checkout</button>
+<div class="fb"></div></div>
+</section>
+
+<section lang="pt-BR">
+<h1>Banco 1: Pegando sua branch</h1>
+<p class="lede">Objetivo: ter o projeto no seu computador, na branch <code>banco-de-dados</code>, com o Git sabendo quem você é. Os seus commits desta trilha vão só para essa branch; o grupo mescla ela na <code>master</code> depois.</p>
+
+<h2>1. O que é uma branch?</h2>
+<p>Uma branch é uma linha separada de commits. A <code>master</code> tem o projeto como está hoje. A <code>banco-de-dados</code> começa como uma cópia dela e recebe só as suas mudanças, então você e o colega do frontend nunca atrapalham um ao outro. Depois as branches são <b>mescladas</b> (merge) de volta na <code>master</code>.
+(<a href="https://git-scm.com/book/pt-br/v2/Ramifica%c3%a7%c3%a3o-Branching-no-Git-Branches-Remotos-Remote-Branches">Pro Git: branches remotos</a>)</p>
+
+<h2>2. Instale e confira</h2>
+<div class="task">
+<p>Você precisa do <a href="https://git-scm.com/downloads">Git</a> e do Docker Desktop. Abra um terminal (PowerShell no Windows) e confira:</p>
+<pre>git --version
+docker --version</pre>
+<p>Os dois devem mostrar um número de versão.</p>
+</div>
+
+<h2>3. Pegue o projeto e troque para a sua branch</h2>
+<div class="task">
+<p>Se você <b>ainda não</b> tem o repositório:</p>
+<pre>git clone https://github.com/amandaolliveira/salve-uma-musica.git
+cd salve-uma-musica</pre>
+<p>Se você já tem, entre na pasta dele e baixe o que há de novo:</p>
+<pre>git fetch</pre>
+<p>Depois, nos dois casos:</p>
+<pre>git checkout banco-de-dados
+git branch</pre>
+<p>Esperado: <code>branch 'banco-de-dados' set up to track 'origin/banco-de-dados'</code> (ou <code>Switched to branch</code>), e o <code>git branch</code> mostra <code>* banco-de-dados</code>. O asterisco marca a branch em que você está.</p>
+</div>
+
+<h2>4. Diga ao Git quem você é (uma vez por computador)</h2>
+<div class="task">
+<pre>git config --global user.name "Seu Nome"
+git config --global user.email "o-email-da-sua-conta-do-github"</pre>
+<p>Todo commit leva esse nome e e-mail. O trabalho confere se todos os integrantes têm commits, então use o e-mail da sua conta do GitHub.</p>
+</div>
+
+<h2>5. O ciclo que você vai usar na aula 5</h2>
+<pre>git status                      o que mudou?
+git add docs/estrutura_banco.md  escolha o que vai no próximo commit
+git commit -m "mensagem"        salve uma versão, com uma mensagem
+git push                        envie seus commits para o GitHub (sua branch)
+git pull                        traga os commits mais novos da sua branch</pre>
+<p>(<a href="https://git-scm.com/book/pt-br/v2/Fundamentos-do-Git-Gravando-Altera%c3%a7%c3%b5es-no-Reposit%c3%b3rio">Pro Git: gravando alterações</a>) O primeiro <code>git push</code> abre uma janela do navegador para entrar no GitHub. Para conseguir enviar, a sua conta do GitHub precisa ser colaboradora do repositório; quem é dono do repositório adiciona você em <i>Settings → Collaborators</i>.</p>
+
+<h2>6. Duas regras</h2>
+<ul>
+<li>Antes de trabalhar, rode <code>git branch</code> e confira se o asterisco está na <code>banco-de-dados</code>. Nunca faça commit na <code>master</code>.</li>
+<li>Não faça merge de nada sozinho. O grupo mescla as branches junto, no fim.</li>
+</ul>
+
+<h2>7. Se algo der errado</h2>
+<table>
+<tr><th>Mensagem</th><th>O que fazer</th></tr>
+<tr><td><code>pathspec 'banco-de-dados' did not match</code></td><td>Rode <code>git fetch</code> e tente de novo. Se continuar, a branch ainda não foi enviada ao GitHub: peça ao colega do backend para enviá-la.</td></tr>
+<tr><td><code>Please tell me who you are</code></td><td>Faça a seção 4.</td></tr>
+<tr><td><code>Permission denied</code> ou <code>403</code> no push</td><td>Sua conta do GitHub ainda não é colaboradora. Peça ao dono do repositório.</td></tr>
+<tr><td><code>Your local changes would be overwritten</code> no checkout</td><td>Você alterou arquivos em outra branch. Rode <code>git status</code>; para descartar essas mudanças, <code>git restore .</code></td></tr>
+</table>
+<p>Para abrir estas aulas a qualquer momento: abra no navegador o arquivo <code>docs/learning/index.html</code> do repositório (clique duas vezes nele).</p>
+
+<h2>8. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="1" data-why="Cada integrante trabalha em uma branch separada, e o grupo mescla todas no fim.">
+<p>Por que cada integrante tem uma branch separada?</p>
+<button>O GitHub só permite uma pessoa por branch</button>
+<button>Para as mudanças não se chocarem até o merge</button>
+<button>Porque a master é só leitura no GitHub</button>
+<button>Para deixar a pasta do projeto menor</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="O git branch lista as branches e marca a atual com *.">
+<p>Como você confere em qual branch está?</p>
+<button>git log</button>
+<button>git push</button>
+<button>git fetch</button>
+<button>git branch, e procurar o asterisco</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="O commit salva só no seu computador; é o push que envia os commits para o GitHub.">
+<p>Você fez commit, mas os colegas não veem no GitHub. O que falta?</p>
+<button>git push</button>
+<button>git add</button>
+<button>git status</button>
+<button>git checkout</button>
+<div class="fb"></div></div>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
