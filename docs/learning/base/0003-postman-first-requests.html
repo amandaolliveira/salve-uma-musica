@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 3: Postman first requests</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Lesson 3: Your first requests in Postman</h1>
+<p class="lede">Win: build a Postman collection with a request for every HTTP method, read each status code, save a new document's ID in a variable, and compare your work with <code>postman/colecao.json</code>. Needs lessons 1 and 2 done (containers running).</p>
+
+<h2>1. Why Postman, in one minute</h2>
+<p>A browser can only send GET from the address bar. Postman is a form for building any request (method, URL, login, headers, body) and showing the answer clearly (status code, time, JSON). A <b>collection</b> is a saved group of those requests. Exporting it gives a JSON file that anyone can import to repeat your tests. (<a href="https://learning.postman.com/docs/getting-started/first-steps/sending-the-first-request/">Postman docs: send your first request</a>) The menu names below may differ a little in your version.</p>
+
+<h2>2. Set up the collection once</h2>
+<div class="task">
+<ol>
+<li>Create a new collection named <code>Salve Uma Música (treino)</code>.</li>
+<li><b>Authorization</b> tab of the collection: type <b>Basic Auth</b>, user <code>admin</code>, password <code>secret</code>. Every request inside will use <i>Inherit auth from parent</i>, so you type the login only once.</li>
+<li><b>Variables</b> tab of the collection: add <code>base_url</code> = <code>http://localhost:8080</code> and an empty <code>id_manual</code>. In a request you write <code>{{base_url}}/musica/{{id_manual}}</code> and Postman fills the values in.</li>
+</ol>
+</div>
+
+<h2>3. Save an ID from a response (the only scripting you need)</h2>
+<p>A song added by hand has no Deezer id, so you POST it without <code>_id</code> and MongoDB invents one. RESTHeart returns it in the <b>Location</b> header (look at the response's Headers tab). To reuse it, open the <b>Scripts</b> tab (older versions: <b>Tests</b>) of the POST request below and add:</p>
+<pre>const location = pm.response.headers.get("Location");
+pm.collectionVariables.set("id_manual", location.split("/").pop());</pre>
+
+<h2>4. The requests</h2>
+<p>Create these in order. For the body, open the <b>Body</b> tab, choose <b>raw</b> and <b>JSON</b>; Postman then sends the right <code>Content-Type</code> header for you. Click <b>Send</b> and compare the status with the table.</p>
+<pre>Method  URL                                Body                                            Expect
+PUT     {{base_url}}/musica                (none)                                          201 (200 if it exists)
+POST    {{base_url}}/musica                { "titulo": "Teste", "duracao": 100,            201
+                                             "adicionado_manualmente": true, "vitorias": 0 }
+GET     {{base_url}}/musica/{{id_manual}}  (none)                                          200
+GET     {{base_url}}/musica?pagesize=20    (none)                                          200
+PUT     {{base_url}}/musica/{{id_manual}}  { "titulo": "Teste 2", "duracao": 100 }         200
+PATCH   {{base_url}}/musica/{{id_manual}}  { "$inc": { "vitorias": 1 } }                   200
+DELETE  {{base_url}}/musica/{{id_manual}}  (none)                                          204</pre>
+<p>Then GET <code>{{base_url}}/musica/{{id_manual}}</code> once more: it should now be <b>404</b>. Check what each step did: after the PUT, <code>adicionado_manualmente</code> is gone (PUT replaces the whole document), and the PATCH created <code>vitorias</code> again with the value 1. That is the trap from lesson 2, now visible.</p>
+<p class="note">Imported songs use Deezer's number as <code>_id</code>, so a request by id for them needs <code>?id_type=NUMBER</code>, for example <code>{{base_url}}/musica/518458172?id_type=NUMBER</code> (lesson 2, trap 4).</p>
+<div class="task">
+<p><b>Warning: 201 does not prove your data was saved.</b> It only means "a document was created". If the Body tab is on <b>none</b>, or on a type other than <b>raw</b> + <b>JSON</b>, the POST still returns 201 but stores an <i>empty</i> document with a generated <code>_id</code>, and every re-send adds another one. After any POST, run the GET and check that your fields (<code>titulo</code>, <code>duracao</code>) are there. If you see documents with only an <code>_id</code>, delete them (<code>DELETE {{base_url}}/musica/&lt;_id&gt;</code>), fix the Body tab, and send the POST again.</p>
+</div>
+
+<h2>5. Compare with the project's collection</h2>
+<div class="task">
+<p>The repo already has the full collection in <code>postman/colecao.json</code> (Deezer requests, both collections, every method, and a test on each status). Do <b>not</b> export over it. Instead, choose <b>Import</b> in Postman, pick that file, and compare it with what you built. You can run it all at once with the collection's <b>Run</b> button.</p>
+<p class="note">The file includes the login <code>admin</code> / <code>secret</code>. That is fine here, because it is RESTHeart's public default.</p>
+</div>
+
+<h2>6. Check yourself</h2>
+<div class="quiz" data-answer="2" data-why="Inheriting from the collection means the login is stored once and used by every request.">
+<p>Why set Basic Auth on the collection instead of on each request?</p>
+<button>Requests cannot have their own auth</button>
+<button>Postman refuses to send without it</button>
+<button>You type the login once for all requests</button>
+<button>It makes the server respond faster</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="The collection variable fills {{base_url}} everywhere; change it once if the port or host changes.">
+<p>What does <code>{{base_url}}</code> in a URL do?</p>
+<button>Postman replaces it with the variable's value</button>
+<button>It sends the literal text to the server</button>
+<button>It creates a new collection on the server</button>
+<button>It logs in with the default password</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="1" data-why="DELETE succeeds with 204, and the document is gone, so a later GET returns 404.">
+<p>You DELETE a song, then GET it. What do you expect?</p>
+<button>200 and the song, because it is cached</button>
+<button>404 because the song no longer exists</button>
+<button>204 because the earlier delete worked</button>
+<button>409 because the song is a duplicate</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="201 only says a document was created. With Body on none, the document is empty, so you must check the fields with a GET.">
+<p>Your POST returned 201, but the list shows documents with only an <code>_id</code>. What is the most likely cause?</p>
+<button>The server is too slow to save fields</button>
+<button>The song was a duplicate of an older one</button>
+<button>The login is wrong for this request</button>
+<button>The Body tab was not on raw + JSON</button>
+<div class="fb"></div></div>
+
+<h2>Next</h2>
+<p>Postman ignores a browser rule called CORS, so everything here works even where a web page would be blocked. Lesson 4 shows where that matters: calling Deezer from the frontend.</p>
+</section>
+
+<section lang="pt-BR">
+<h1>Aula 3: Suas primeiras requisições no Postman</h1>
+<p class="lede">Objetivo: montar uma coleção do Postman com uma requisição para cada método HTTP, ler cada código de status, guardar o ID de um documento novo em uma variável e comparar seu trabalho com o <code>postman/colecao.json</code>. Precisa das aulas 1 e 2 concluídas (contêineres rodando).</p>
+
+<h2>1. Por que Postman, em um minuto</h2>
+<p>Um navegador só envia GET pela barra de endereço. O Postman é um formulário para montar qualquer requisição (método, URL, login, cabeçalhos, corpo) e mostrar a resposta com clareza (código de status, tempo, JSON). Uma <b>coleção</b> é um grupo salvo dessas requisições. Exportá-la gera um arquivo JSON que qualquer pessoa pode importar para repetir seus testes. (<a href="https://learning.postman.com/docs/getting-started/first-steps/sending-the-first-request/">Documentação do Postman: enviar sua primeira requisição</a>, em inglês) Os nomes de menu abaixo podem variar um pouco na sua versão.</p>
+
+<h2>2. Configure a coleção uma vez</h2>
+<div class="task">
+<ol>
+<li>Crie uma coleção nova chamada <code>Salve Uma Música (treino)</code>.</li>
+<li>Na aba <b>Authorization</b> da coleção: tipo <b>Basic Auth</b>, usuário <code>admin</code>, senha <code>secret</code>. Cada requisição dentro dela usa <i>Inherit auth from parent</i>, então você digita o login uma única vez.</li>
+<li>Na aba <b>Variables</b> da coleção: adicione <code>base_url</code> = <code>http://localhost:8080</code> e uma <code>id_manual</code> vazia. Em uma requisição você escreve <code>{{base_url}}/musica/{{id_manual}}</code> e o Postman preenche os valores.</li>
+</ol>
+</div>
+
+<h2>3. Guarde um ID de uma resposta (o único script de que você precisa)</h2>
+<p>Uma música adicionada à mão não tem id do Deezer, então você faz o POST sem <code>_id</code> e o MongoDB inventa um. O RESTHeart o devolve no cabeçalho <b>Location</b> (veja a aba Headers da resposta). Para reutilizá-lo, abra a aba <b>Scripts</b> (versões antigas: <b>Tests</b>) da requisição POST abaixo e adicione:</p>
+<pre>const location = pm.response.headers.get("Location");
+pm.collectionVariables.set("id_manual", location.split("/").pop());</pre>
+
+<h2>4. As requisições</h2>
+<p>Crie-as nesta ordem. Para o corpo, abra a aba <b>Body</b>, escolha <b>raw</b> e <b>JSON</b>; assim o Postman envia o cabeçalho <code>Content-Type</code> correto para você. Clique em <b>Send</b> e compare o status com a tabela.</p>
+<pre>Método  URL                                Corpo                                           Esperado
+PUT     {{base_url}}/musica                (nenhum)                                        201 (200 se já existe)
+POST    {{base_url}}/musica                { "titulo": "Teste", "duracao": 100,            201
+                                             "adicionado_manualmente": true, "vitorias": 0 }
+GET     {{base_url}}/musica/{{id_manual}}  (nenhum)                                        200
+GET     {{base_url}}/musica?pagesize=20    (nenhum)                                        200
+PUT     {{base_url}}/musica/{{id_manual}}  { "titulo": "Teste 2", "duracao": 100 }         200
+PATCH   {{base_url}}/musica/{{id_manual}}  { "$inc": { "vitorias": 1 } }                   200
+DELETE  {{base_url}}/musica/{{id_manual}}  (nenhum)                                        204</pre>
+<p>Depois faça GET em <code>{{base_url}}/musica/{{id_manual}}</code> mais uma vez: agora deve dar <b>404</b>. Confira o efeito de cada passo: depois do PUT, o <code>adicionado_manualmente</code> sumiu (o PUT substitui o documento inteiro), e o PATCH criou o <code>vitorias</code> de novo com o valor 1. É a armadilha da aula 2, agora visível.</p>
+<p class="note">Músicas importadas usam o número do Deezer como <code>_id</code>, então uma requisição por id delas precisa de <code>?id_type=NUMBER</code>, por exemplo <code>{{base_url}}/musica/518458172?id_type=NUMBER</code> (aula 2, armadilha 4).</p>
+<div class="task">
+<p><b>Atenção: o 201 não prova que seus dados foram salvos.</b> Ele só significa "um documento foi criado". Se a aba Body estiver em <b>none</b>, ou em um tipo diferente de <b>raw</b> + <b>JSON</b>, o POST ainda retorna 201, mas guarda um documento <i>vazio</i> com um <code>_id</code> gerado, e cada novo envio adiciona mais um. Depois de qualquer POST, faça o GET e confira se os seus campos (<code>titulo</code>, <code>duracao</code>) estão lá. Se aparecerem documentos só com <code>_id</code>, apague-os (<code>DELETE {{base_url}}/musica/&lt;_id&gt;</code>), corrija a aba Body e envie o POST de novo.</p>
+</div>
+
+<h2>5. Compare com a coleção do projeto</h2>
+<div class="task">
+<p>O repositório já tem a coleção completa em <code>postman/colecao.json</code> (requisições ao Deezer, as duas coleções, todos os métodos e um teste em cada status). <b>Não</b> exporte por cima dela. Em vez disso, use <b>Import</b> no Postman, escolha esse arquivo e compare com o que você montou. Dá para rodar tudo de uma vez com o botão <b>Run</b> da coleção.</p>
+<p class="note">O arquivo inclui o login <code>admin</code> / <code>secret</code>. Aqui não há problema, porque é o padrão público do RESTHeart.</p>
+</div>
+
+<h2>6. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="2" data-why="Herdar da coleção significa guardar o login uma vez e usá-lo em todas as requisições.">
+<p>Por que configurar o Basic Auth na coleção em vez de em cada requisição?</p>
+<button>Requisições não podem ter autenticação própria</button>
+<button>O Postman se recusa a enviar sem isso</button>
+<button>Você digita o login uma única vez para todas</button>
+<button>Faz o servidor responder mais rápido</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="A variável da coleção preenche {{base_url}} em todo lugar; se o host ou a porta mudar, você troca em um só ponto.">
+<p>O que faz <code>{{base_url}}</code> em uma URL?</p>
+<button>O Postman o troca pelo valor da variável</button>
+<button>Envia o texto literal para o servidor</button>
+<button>Cria uma coleção nova no servidor</button>
+<button>Faz login com a senha padrão</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="1" data-why="O DELETE dá certo com 204 e o documento some, então um GET depois retorna 404.">
+<p>Você faz DELETE de uma música e depois GET dela. O que espera?</p>
+<button>200 e a música, porque está em cache</button>
+<button>404 porque a música não existe mais</button>
+<button>204 porque o delete anterior funcionou</button>
+<button>409 porque a música é duplicada</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="O 201 só diz que um documento foi criado. Com o Body em none, o documento fica vazio, por isso é preciso conferir os campos com um GET.">
+<p>Seu POST retornou 201, mas a lista mostra documentos só com <code>_id</code>. Qual é a causa mais provável?</p>
+<button>O servidor é lento demais para salvar os campos</button>
+<button>A música era duplicata de uma mais antiga</button>
+<button>O login está errado para essa requisição</button>
+<button>A aba Body não estava em raw + JSON</button>
+<div class="fb"></div></div>
+
+<h2>Próxima aula</h2>
+<p>O Postman ignora uma regra do navegador chamada CORS, então tudo aqui funciona mesmo onde uma página web seria bloqueada. A aula 4 mostra onde isso importa: chamar o Deezer a partir do frontend.</p>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

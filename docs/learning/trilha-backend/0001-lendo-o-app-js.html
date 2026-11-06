@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backend 1: Reading app.js</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Backend 1: Reading app.js</h1>
+<p class="lede">Win: open <code>frontend/app.js</code>, find any function in seconds, and say which HTTP request it makes and why. The assignment says any member may be asked about any line.</p>
+
+<h2>1. The map</h2>
+<p>The file is split into sections marked with <code>// ---------- Name ----------</code>. Read it with this table open.</p>
+<table>
+<tr><th>Section</th><th>Main functions</th><th>What they do</th></tr>
+<tr><td>Requisições</td><td><code>requisicao</code>, <code>deezer</code>, <code>urlDocumento</code>, <code>garantirColecoes</code>, <code>listarMusicas</code>, <code>buscarMusica</code>, <code>inserir</code>, <code>substituirMusica</code>, <code>alterarMusica</code>, <code>excluirMusica</code></td><td>Every HTTP call lives here. The other sections never call <code>fetch</code> on the database directly.</td></tr>
+<tr><td>Importação</td><td><code>importar</code>, <code>documentoDaFaixa</code>, <code>documentoDoArtista</code>, <code>carregarGenerosDeezer</code></td><td>Reads Deezer and turns each track into our document.</td></tr>
+<tr><td>Mensagens e utilidades</td><td><code>executar</code>, <code>mostrarMensagem</code>, <code>recarregar</code>, <code>el</code>, ...</td><td>Loading/success/error messages, and <code>recarregar</code>, which refreshes the list and the dashboard.</td></tr>
+<tr><td>Listagem</td><td><code>musicasFiltradas</code>, <code>renderizarLista</code>, <code>aoClicarNaLista</code></td><td>Search, filters, and the Edit / Zero wins / Delete buttons.</td></tr>
+<tr><td>Formulário</td><td><code>validar</code>, <code>aoEnviarFormulario</code>, <code>abrirEdicao</code></td><td>Validation, create (POST) and edit (PUT).</td></tr>
+<tr><td>Painel</td><td><code>calcularIndicadores</code>, <code>renderizarPainel</code>, <code>atualizarGrafico</code></td><td>Indicators, ranking, by-genre table and Chart.js charts.</td></tr>
+<tr><td>Jogo</td><td><code>iniciarJogo</code>, <code>escolher</code>, <code>finalizarJogo</code></td><td>Draws the songs, runs the rounds, and records the win.</td></tr>
+<tr><td>Início</td><td><code>ligarEventos</code>, <code>iniciar</code></td><td>Connects buttons to functions and starts the page.</td></tr>
+</table>
+
+<h2>2. What happens when the page opens</h2>
+<pre>iniciar()
+  ligarEventos()            buttons and forms start working
+  garantirColecoes()        GET /musica?pagesize=1  -> 404? then PUT /musica (201)
+                            same for /artista
+  recarregar()              GET /musica?pagesize=1000, then list + dashboard
+  carregarGenerosDeezer()   GET /deezer/genre (through the nginx proxy)</pre>
+<p>That is why the professor only needs <code>docker compose up -d</code>: the collections are created by the page itself.</p>
+
+<h2>3. Where each HTTP method happens</h2>
+<table>
+<tr><th>Method</th><th>Function</th><th>Triggered by</th></tr>
+<tr><td>GET</td><td><code>deezer</code></td><td>Genre list and import (Deezer, through the proxy)</td></tr>
+<tr><td>GET</td><td><code>listarMusicas</code> / <code>buscarMusica</code></td><td>Every reload / the Edit button (search by id)</td></tr>
+<tr><td>POST</td><td><code>inserir</code></td><td>Import (each song and artist) and the "Adicionar" form</td></tr>
+<tr><td>PUT</td><td><code>substituirMusica</code></td><td>Saving the edit form</td></tr>
+<tr><td>PATCH</td><td><code>alterarMusica</code></td><td>End of a game (<code>$inc</code> on <code>vitorias</code>) and "Zerar vitórias"</td></tr>
+<tr><td>DELETE</td><td><code>excluirMusica</code></td><td>The Delete button, after <code>confirm()</code></td></tr>
+</table>
+
+<h2>4. Four details you should be able to explain</h2>
+<ul>
+<li><b><code>urlDocumento</code></b>: imported songs have a number as <code>_id</code>, so their URL gets <code>?id_type=NUMBER</code>. Manual songs have an ObjectId (<code>{ "$oid": "..." }</code>), so the URL uses that text.</li>
+<li><b><code>inserir</code> accepts 409</b>: 409 means "this <code>_id</code> already exists". On import that is expected, so it counts as "already in the database" instead of an error.</li>
+<li><b>The PUT keeps fields the form does not show</b>: in <code>aoEnviarFormulario</code>, <code>const { _id, _etag, ...resto } = edicao</code> takes the document loaded by the GET, removes <code>_id</code> (it goes in the URL) and <code>_etag</code> (RESTHeart's), and keeps the rest (<code>vitorias</code>, <code>criado_em</code>...). Without that, the PUT would wipe them.</li>
+<li><b><code>executar</code> + <code>recarregar</code></b>: every change runs inside <code>executar</code> (shows loading, then success or the error with the HTTP status) and ends with <code>recarregar()</code>. That is the requirement "indicators update after every POST, PUT, PATCH or DELETE".</li>
+</ul>
+<details><summary>Optional: how the game picks the winner</summary>
+<p><code>jogo.faseAtual</code> holds the songs still in the game. Each round shows positions <code>indice</code> and <code>indice + 1</code>; the chosen one goes to <code>jogo.proximaFase</code>. When the phase ends, <code>proximaFase</code> becomes <code>faseAtual</code>. When only one is left, <code>finalizarJogo</code> sends the PATCH.</p>
+</details>
+
+<h2>5. Try it</h2>
+<div class="task">
+<p>With <code>docker compose up -d</code> running, open <a href="http://localhost:3000">http://localhost:3000</a>, press F12 and open the <b>Network</b> tab. Type <code>8080</code> in its filter box. Then:</p>
+<ol>
+<li>Click <b>Editar</b> on a song: you see a GET for that id.</li>
+<li>Change the title and save: a PUT, then a GET of the list (that is <code>recarregar</code>).</li>
+<li>Click <b>Zerar vitórias</b>: a PATCH.</li>
+<li>Play an 8-song game: no request during the rounds, one PATCH at the end.</li>
+</ol>
+<p>The <b>Status</b> column shows the code of each request. Compare it with the table in section 3.</p>
+</div>
+
+<h2>6. Check yourself</h2>
+<div class="quiz" data-answer="1" data-why="The rounds only happen in memory; the database is touched once, by the PATCH that adds the win.">
+<p>How many requests to the database does an 8-song game send while you pick songs?</p>
+<button>One PATCH per round, seven in total</button>
+<button>None until the end, then one PATCH</button>
+<button>One GET per song shown on screen</button>
+<button>One PUT per phase of the game</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="2" data-why="PUT replaces everything, so the code sends the loaded document with only the form fields changed.">
+<p>Why does the edit send <code>...resto</code> instead of only the form fields?</p>
+<button>RESTHeart rejects small request bodies</button>
+<button>It makes the request faster</button>
+<button>PUT would erase the fields left out</button>
+<button>The form needs the _etag to work</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="On import, 409 just means the song is already saved, so it is counted, not shown as an error.">
+<p>During an import, a POST returns 409. What does the app do?</p>
+<button>Counts it as "already in the database"</button>
+<button>Stops the import with a red error</button>
+<button>Retries the POST with a new id</button>
+<button>Deletes the old song and inserts again</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="Every change ends with recarregar(), which lists again and recalculates the dashboard.">
+<p>Which function makes the dashboard update after a change?</p>
+<button>calcularIndicadores, called by a timer</button>
+<button>garantirColecoes, called on every click</button>
+<button>atualizarGrafico, called by Chart.js</button>
+<button>recarregar, called after each change</button>
+<div class="fb"></div></div>
+</section>
+
+<section lang="pt-BR">
+<h1>Backend 1: Lendo o app.js</h1>
+<p class="lede">Objetivo: abrir o <code>frontend/app.js</code>, achar qualquer função em segundos e dizer qual requisição HTTP ela faz e por quê. O trabalho diz que qualquer integrante pode ser perguntado sobre qualquer linha.</p>
+
+<h2>1. O mapa</h2>
+<p>O arquivo é dividido em seções marcadas com <code>// ---------- Nome ----------</code>. Leia com esta tabela aberta.</p>
+<table>
+<tr><th>Seção</th><th>Funções principais</th><th>O que fazem</th></tr>
+<tr><td>Requisições</td><td><code>requisicao</code>, <code>deezer</code>, <code>urlDocumento</code>, <code>garantirColecoes</code>, <code>listarMusicas</code>, <code>buscarMusica</code>, <code>inserir</code>, <code>substituirMusica</code>, <code>alterarMusica</code>, <code>excluirMusica</code></td><td>Toda chamada HTTP fica aqui. As outras seções nunca chamam <code>fetch</code> no banco direto.</td></tr>
+<tr><td>Importação</td><td><code>importar</code>, <code>documentoDaFaixa</code>, <code>documentoDoArtista</code>, <code>carregarGenerosDeezer</code></td><td>Lê o Deezer e transforma cada faixa no nosso documento.</td></tr>
+<tr><td>Mensagens e utilidades</td><td><code>executar</code>, <code>mostrarMensagem</code>, <code>recarregar</code>, <code>el</code>, ...</td><td>Mensagens de carregando/sucesso/erro, e o <code>recarregar</code>, que atualiza a lista e o painel.</td></tr>
+<tr><td>Listagem</td><td><code>musicasFiltradas</code>, <code>renderizarLista</code>, <code>aoClicarNaLista</code></td><td>Busca, filtros e os botões Editar / Zerar vitórias / Excluir.</td></tr>
+<tr><td>Formulário</td><td><code>validar</code>, <code>aoEnviarFormulario</code>, <code>abrirEdicao</code></td><td>Validação, criar (POST) e editar (PUT).</td></tr>
+<tr><td>Painel</td><td><code>calcularIndicadores</code>, <code>renderizarPainel</code>, <code>atualizarGrafico</code></td><td>Indicadores, ranking, tabela por gênero e gráficos do Chart.js.</td></tr>
+<tr><td>Jogo</td><td><code>iniciarJogo</code>, <code>escolher</code>, <code>finalizarJogo</code></td><td>Sorteia as músicas, roda os rounds e registra a vitória.</td></tr>
+<tr><td>Início</td><td><code>ligarEventos</code>, <code>iniciar</code></td><td>Liga os botões às funções e inicia a página.</td></tr>
+</table>
+
+<h2>2. O que acontece quando a página abre</h2>
+<pre>iniciar()
+  ligarEventos()            botões e formulários passam a funcionar
+  garantirColecoes()        GET /musica?pagesize=1  -> 404? então PUT /musica (201)
+                            o mesmo para /artista
+  recarregar()              GET /musica?pagesize=1000, depois lista + painel
+  carregarGenerosDeezer()   GET /deezer/genre (pelo proxy do nginx)</pre>
+<p>Por isso o professor só precisa do <code>docker compose up -d</code>: as coleções são criadas pela própria página.</p>
+
+<h2>3. Onde acontece cada método HTTP</h2>
+<table>
+<tr><th>Método</th><th>Função</th><th>Disparado por</th></tr>
+<tr><td>GET</td><td><code>deezer</code></td><td>Lista de gêneros e importação (Deezer, pelo proxy)</td></tr>
+<tr><td>GET</td><td><code>listarMusicas</code> / <code>buscarMusica</code></td><td>Todo recarregamento / o botão Editar (busca por id)</td></tr>
+<tr><td>POST</td><td><code>inserir</code></td><td>Importação (cada música e artista) e o formulário "Adicionar"</td></tr>
+<tr><td>PUT</td><td><code>substituirMusica</code></td><td>Salvar o formulário de edição</td></tr>
+<tr><td>PATCH</td><td><code>alterarMusica</code></td><td>Fim de uma partida (<code>$inc</code> em <code>vitorias</code>) e "Zerar vitórias"</td></tr>
+<tr><td>DELETE</td><td><code>excluirMusica</code></td><td>O botão Excluir, depois do <code>confirm()</code></td></tr>
+</table>
+
+<h2>4. Quatro detalhes que você precisa saber explicar</h2>
+<ul>
+<li><b><code>urlDocumento</code></b>: músicas importadas têm um número como <code>_id</code>, então a URL delas ganha <code>?id_type=NUMBER</code>. Músicas manuais têm um ObjectId (<code>{ "$oid": "..." }</code>), então a URL usa esse texto.</li>
+<li><b>O <code>inserir</code> aceita 409</b>: 409 significa "esse <code>_id</code> já existe". Na importação isso é esperado, então conta como "já estava no banco" em vez de erro.</li>
+<li><b>O PUT mantém os campos que o formulário não mostra</b>: no <code>aoEnviarFormulario</code>, <code>const { _id, _etag, ...resto } = edicao</code> pega o documento carregado pelo GET, tira o <code>_id</code> (vai na URL) e o <code>_etag</code> (do RESTHeart), e mantém o resto (<code>vitorias</code>, <code>criado_em</code>...). Sem isso, o PUT apagaria esses campos.</li>
+<li><b><code>executar</code> + <code>recarregar</code></b>: toda alteração roda dentro do <code>executar</code> (mostra carregando, depois sucesso ou o erro com o status HTTP) e termina com <code>recarregar()</code>. É o requisito "os indicadores se atualizam depois de cada POST, PUT, PATCH ou DELETE".</li>
+</ul>
+<details><summary>Opcional: como o jogo escolhe a vencedora</summary>
+<p><code>jogo.faseAtual</code> guarda as músicas que ainda estão no jogo. Cada round mostra as posições <code>indice</code> e <code>indice + 1</code>; a escolhida vai para <code>jogo.proximaFase</code>. Quando a fase acaba, <code>proximaFase</code> vira <code>faseAtual</code>. Quando sobra uma, o <code>finalizarJogo</code> envia o PATCH.</p>
+</details>
+
+<h2>5. Experimente</h2>
+<div class="task">
+<p>Com o <code>docker compose up -d</code> rodando, abra <a href="http://localhost:3000">http://localhost:3000</a>, aperte F12 e abra a aba <b>Network</b> (Rede). Digite <code>8080</code> no filtro dela. Depois:</p>
+<ol>
+<li>Clique em <b>Editar</b> em uma música: aparece um GET daquele id.</li>
+<li>Mude o título e salve: um PUT, depois um GET da lista (é o <code>recarregar</code>).</li>
+<li>Clique em <b>Zerar vitórias</b>: um PATCH.</li>
+<li>Jogue uma partida de 8 músicas: nenhuma requisição durante os rounds, um PATCH no fim.</li>
+</ol>
+<p>A coluna <b>Status</b> mostra o código de cada requisição. Compare com a tabela da seção 3.</p>
+</div>
+
+<h2>6. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="1" data-why="Os rounds só acontecem na memória; o banco é acessado uma vez, pelo PATCH que soma a vitória.">
+<p>Quantas requisições ao banco uma partida de 8 músicas envia enquanto você escolhe as músicas?</p>
+<button>Um PATCH por round, sete no total</button>
+<button>Nenhuma até o fim, depois um PATCH</button>
+<button>Um GET por música mostrada na tela</button>
+<button>Um PUT por fase do jogo</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="2" data-why="O PUT substitui tudo, então o código envia o documento carregado só com os campos do formulário trocados.">
+<p>Por que a edição envia o <code>...resto</code> em vez de só os campos do formulário?</p>
+<button>O RESTHeart rejeita corpos pequenos</button>
+<button>Deixa a requisição mais rápida</button>
+<button>O PUT apagaria os campos que faltassem</button>
+<button>O formulário precisa do _etag para funcionar</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="Na importação, 409 só quer dizer que a música já está salva, então é contada, não mostrada como erro.">
+<p>Durante uma importação, um POST retorna 409. O que o app faz?</p>
+<button>Conta como "já estava no banco"</button>
+<button>Para a importação com um erro vermelho</button>
+<button>Tenta o POST de novo com outro id</button>
+<button>Apaga a música antiga e insere de novo</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="Toda alteração termina com recarregar(), que lista de novo e recalcula o painel.">
+<p>Qual função faz o painel se atualizar depois de uma alteração?</p>
+<button>calcularIndicadores, chamada por um timer</button>
+<button>garantirColecoes, chamada a cada clique</button>
+<button>atualizarGrafico, chamada pelo Chart.js</button>
+<button>recarregar, chamada depois de cada alteração</button>
+<div class="fb"></div></div>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

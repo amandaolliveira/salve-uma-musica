@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docker Compose cheat sheet</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Docker Compose cheat sheet</h1>
+<p class="lede">Run from the folder containing <code>docker-compose.yml</code>.
+Source: <a href="https://docs.docker.com/compose/gettingstarted/">Docker docs</a>.</p>
+<pre>docker compose up -d              start everything in the background
+docker compose ps                 list services and their state
+docker compose logs -f restheart  follow one service's logs (Ctrl+C exits)
+docker compose down               stop and remove containers, KEEP volumes
+docker compose down -v            also DELETE named volumes (data is lost)</pre>
+<h2>Glossary</h2>
+<dl>
+<dt><b>Container</b></dt><dd>Isolated process with everything it needs to run.</dd>
+<dt><b>Service</b></dt><dd>One entry under <code>services:</code> (mongodb, restheart, frontend).</dd>
+<dt><b>Port mapping</b></dt><dd><code>HOST:CONTAINER</code>, left side is your computer.</dd>
+<dt><b>Named volume</b></dt><dd>Storage managed by Docker that outlives containers (<code>dados-mongo</code>).</dd>
+</dl>
+</section>
+
+<section lang="pt-BR">
+<h1>Guia rápido do Docker Compose</h1>
+<p class="lede">Execute na pasta que contém o <code>docker-compose.yml</code>.
+Fonte: <a href="https://docs.docker.com/compose/gettingstarted/">documentação do Docker</a> (em inglês).</p>
+<pre>docker compose up -d              inicia tudo em segundo plano
+docker compose ps                 lista os serviços e o estado de cada um
+docker compose logs -f restheart  acompanha os logs de um serviço (Ctrl+C sai)
+docker compose down               para e remove os contêineres, MANTÉM os volumes
+docker compose down -v            também APAGA os volumes nomeados (os dados se perdem)</pre>
+<h2>Glossário</h2>
+<dl>
+<dt><b>Contêiner</b></dt><dd>Processo isolado com tudo de que precisa para rodar.</dd>
+<dt><b>Serviço</b></dt><dd>Cada entrada em <code>services:</code> (mongodb, restheart, frontend).</dd>
+<dt><b>Mapeamento de porta</b></dt><dd><code>HOST:CONTÊINER</code>, o lado esquerdo é o seu computador.</dd>
+<dt><b>Volume nomeado</b></dt><dd>Armazenamento gerenciado pelo Docker que dura mais que os contêineres (<code>dados-mongo</code>).</dd>
+</dl>
+</section>
+
+</body>
+</html>

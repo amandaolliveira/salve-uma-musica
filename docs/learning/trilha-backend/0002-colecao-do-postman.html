@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backend 2: The whole Postman collection</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Backend 2: The whole Postman collection</h1>
+<p class="lede">Win: import <code>postman/colecao.json</code>, run all 20 requests in one click, see 27 tests pass, and explain what each folder proves. The collection is a graded deliverable. Needs base lesson 3.</p>
+
+<h2>1. Import it</h2>
+<div class="task">
+<p>In Postman: <b>Import</b> (top left), choose the file <code>postman/colecao.json</code> from the repo. A collection called <b>Salve Uma Música</b> appears. (<a href="https://learning.postman.com/docs/getting-started/importing-and-exporting/importing-data/">Postman docs: importing data</a>)</p>
+</div>
+
+<h2>2. The four folders</h2>
+<table>
+<tr><th>Folder</th><th>What it proves</th></tr>
+<tr><td>1. Deezer</td><td>GET on the source API: genres, the chart of one genre, one track. The chart request saves the first track's data in variables.</td></tr>
+<tr><td>2. Banco - criar coleções</td><td>PUT creates <code>musica</code> and <code>artista</code> (201, or 200 if they exist).</td></tr>
+<tr><td>3. Banco - musica</td><td>The whole CRUD: POST (imported and manual), GET (list, filter, by id), PUT, PATCH, DELETE, and the 404 after the DELETE.</td></tr>
+<tr><td>4. Banco - artista</td><td>POST and GET on the second collection.</td></tr>
+</table>
+
+<h2>3. The variables</h2>
+<p>Open the collection and the <b>Variables</b> tab. Some values are fixed, others are filled by scripts while the collection runs.</p>
+<table>
+<tr><th>Variable</th><th>Filled by</th></tr>
+<tr><td><code>base_url</code>, <code>deezer_url</code></td><td>Fixed: <code>http://localhost:8080</code> and <code>https://api.deezer.com</code></td></tr>
+<tr><td><code>id_genero</code>, <code>nome_genero</code></td><td>Fixed: 152 / Rock. Change both to test another genre.</td></tr>
+<tr><td><code>id_deezer</code>, <code>id_artista</code>, <code>titulo_json</code>, <code>nome_artista_json</code>, <code>duracao</code>, <code>url_capa_json</code>, <code>url_foto_json</code></td><td>The script of "GET Músicas em alta do gênero", from the first track</td></tr>
+<tr><td><code>id_manual</code></td><td>The script of "POST Inserir música manual", from the <code>Location</code> header</td></tr>
+</table>
+<p class="note">Why <code>titulo_json</code> and not <code>titulo</code>? A title may contain quotes, which would break the JSON body. The script stores <code>JSON.stringify(title)</code> (the title already wrapped in quotes and escaped), and the body uses <code>{{titulo_json}}</code> without quotes around it.</p>
+
+<h2>4. Run it</h2>
+<div class="task">
+<ol>
+<li>Start the project: <code>docker compose up -d</code>.</li>
+<li>In Postman, click the three dots of the collection, then <b>Run collection</b>. Keep the order and click <b>Run</b>. (<a href="https://learning.postman.com/docs/collections/running-collections/intro-to-collection-runs/">Postman docs: collection runs</a>)</li>
+<li>Expected: 20 requests, all tests passed.</li>
+</ol>
+<p>The "POST Inserir música importada" may return <b>201</b> or <b>409</b>. Both pass: 409 just means that song had already been imported by the app.</p>
+</div>
+
+<h2>5. Read one test</h2>
+<p>Open "DELETE Excluir música manual" and its <b>Scripts</b> (or <b>Tests</b>) tab:</p>
+<pre>pm.test('Status 204', () => pm.response.to.have.status(204));</pre>
+<p>A test is a named check that runs after the response arrives. If the status is not 204, the run shows it in red. The next request, "GET Música excluída (404)", checks that the document is really gone.</p>
+
+<h2>6. If something fails</h2>
+<table>
+<tr><th>What you see</th><th>Cause</th></tr>
+<tr><td><code>ECONNREFUSED</code> on every database request</td><td>Containers not running. <code>docker compose up -d</code>, wait 10 seconds.</td></tr>
+<tr><td>401 Unauthorized</td><td>The collection's Authorization tab lost Basic Auth <code>admin</code> / <code>secret</code>.</td></tr>
+<tr><td>Only the Deezer folder fails</td><td>No internet. The database folders still work, but the imported POST falls back to the default variable values.</td></tr>
+<tr><td>"GET Buscar música manual por id" gives 404</td><td>"POST Inserir música manual" did not run first, so <code>id_manual</code> is empty. Run the whole collection in order.</td></tr>
+</table>
+
+<h2>7. Check yourself</h2>
+<div class="quiz" data-answer="2" data-why="RESTHeart returns the generated id in the Location header, and the script copies it into id_manual.">
+<p>Where does <code>id_manual</code> come from?</p>
+<button>It is typed by hand before running</button>
+<button>From the Deezer chart response</button>
+<button>From the Location header of the POST</button>
+<button>From the docker-compose.yml file</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="409 means the _id already exists, which happens when the app already imported that song.">
+<p>The imported POST returns 409 and the test passes. Why is that fine?</p>
+<button>The song was already in the database</button>
+<button>409 is RESTHeart's success code</button>
+<button>The test ignores every status code</button>
+<button>Deezer refused to send the song</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="1" data-why="The GET after the DELETE expects 404, proving the document no longer exists.">
+<p>What does "GET Música excluída (404)" prove?</p>
+<button>That the server is down</button>
+<button>That the DELETE really removed the document</button>
+<button>That the id was typed wrong</button>
+<button>That the collection was deleted</button>
+<div class="fb"></div></div>
+</section>
+
+<section lang="pt-BR">
+<h1>Backend 2: A coleção inteira do Postman</h1>
+<p class="lede">Objetivo: importar o <code>postman/colecao.json</code>, rodar as 20 requisições com um clique, ver os 27 testes passarem e explicar o que cada pasta prova. A coleção é um item avaliado. Precisa da aula base 3.</p>
+
+<h2>1. Importe</h2>
+<div class="task">
+<p>No Postman: <b>Import</b> (canto superior esquerdo), escolha o arquivo <code>postman/colecao.json</code> do repositório. Aparece uma coleção chamada <b>Salve Uma Música</b>. (<a href="https://learning.postman.com/docs/getting-started/importing-and-exporting/importing-data/">Documentação do Postman: importar dados</a>, em inglês)</p>
+</div>
+
+<h2>2. As quatro pastas</h2>
+<table>
+<tr><th>Pasta</th><th>O que prova</th></tr>
+<tr><td>1. Deezer</td><td>GET na API de origem: gêneros, o chart de um gênero, uma faixa. A requisição do chart guarda os dados da primeira faixa em variáveis.</td></tr>
+<tr><td>2. Banco - criar coleções</td><td>PUT cria <code>musica</code> e <code>artista</code> (201, ou 200 se já existem).</td></tr>
+<tr><td>3. Banco - musica</td><td>O CRUD inteiro: POST (importada e manual), GET (lista, filtro, por id), PUT, PATCH, DELETE e o 404 depois do DELETE.</td></tr>
+<tr><td>4. Banco - artista</td><td>POST e GET na segunda coleção.</td></tr>
+</table>
+
+<h2>3. As variáveis</h2>
+<p>Abra a coleção e a aba <b>Variables</b>. Alguns valores são fixos, outros são preenchidos por scripts enquanto a coleção roda.</p>
+<table>
+<tr><th>Variável</th><th>Preenchida por</th></tr>
+<tr><td><code>base_url</code>, <code>deezer_url</code></td><td>Fixas: <code>http://localhost:8080</code> e <code>https://api.deezer.com</code></td></tr>
+<tr><td><code>id_genero</code>, <code>nome_genero</code></td><td>Fixas: 152 / Rock. Troque as duas para testar outro gênero.</td></tr>
+<tr><td><code>id_deezer</code>, <code>id_artista</code>, <code>titulo_json</code>, <code>nome_artista_json</code>, <code>duracao</code>, <code>url_capa_json</code>, <code>url_foto_json</code></td><td>O script do "GET Músicas em alta do gênero", a partir da primeira faixa</td></tr>
+<tr><td><code>id_manual</code></td><td>O script do "POST Inserir música manual", a partir do cabeçalho <code>Location</code></td></tr>
+</table>
+<p class="note">Por que <code>titulo_json</code> e não <code>titulo</code>? Um título pode ter aspas, o que quebraria o corpo JSON. O script guarda <code>JSON.stringify(title)</code> (o título já entre aspas e escapado), e o corpo usa <code>{{titulo_json}}</code> sem aspas em volta.</p>
+
+<h2>4. Rode</h2>
+<div class="task">
+<ol>
+<li>Suba o projeto: <code>docker compose up -d</code>.</li>
+<li>No Postman, clique nos três pontos da coleção e depois em <b>Run collection</b>. Mantenha a ordem e clique em <b>Run</b>. (<a href="https://learning.postman.com/docs/collections/running-collections/intro-to-collection-runs/">Documentação do Postman: rodar coleções</a>, em inglês)</li>
+<li>Esperado: 20 requisições, todos os testes passando.</li>
+</ol>
+<p>O "POST Inserir música importada" pode retornar <b>201</b> ou <b>409</b>. Os dois passam: 409 só quer dizer que essa música já tinha sido importada pelo app.</p>
+</div>
+
+<h2>5. Leia um teste</h2>
+<p>Abra o "DELETE Excluir música manual" e a aba <b>Scripts</b> (ou <b>Tests</b>):</p>
+<pre>pm.test('Status 204', () => pm.response.to.have.status(204));</pre>
+<p>Um teste é uma verificação com nome que roda depois que a resposta chega. Se o status não for 204, o resultado aparece em vermelho. A requisição seguinte, "GET Música excluída (404)", confere se o documento sumiu mesmo.</p>
+
+<h2>6. Se algo falhar</h2>
+<table>
+<tr><th>O que aparece</th><th>Causa</th></tr>
+<tr><td><code>ECONNREFUSED</code> em toda requisição ao banco</td><td>Contêineres parados. <code>docker compose up -d</code> e espere 10 segundos.</td></tr>
+<tr><td>401 Unauthorized</td><td>A aba Authorization da coleção perdeu o Basic Auth <code>admin</code> / <code>secret</code>.</td></tr>
+<tr><td>Só a pasta do Deezer falha</td><td>Sem internet. As pastas do banco continuam funcionando, mas o POST da importada usa os valores padrão das variáveis.</td></tr>
+<tr><td>"GET Buscar música manual por id" dá 404</td><td>O "POST Inserir música manual" não rodou antes, então <code>id_manual</code> está vazio. Rode a coleção inteira, em ordem.</td></tr>
+</table>
+
+<h2>7. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="2" data-why="O RESTHeart devolve o id gerado no cabeçalho Location, e o script copia para o id_manual.">
+<p>De onde vem o <code>id_manual</code>?</p>
+<button>É digitado à mão antes de rodar</button>
+<button>Da resposta do chart do Deezer</button>
+<button>Do cabeçalho Location do POST</button>
+<button>Do arquivo docker-compose.yml</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="409 significa que o _id já existe, o que acontece quando o app já importou essa música.">
+<p>O POST da importada retorna 409 e o teste passa. Por que está tudo bem?</p>
+<button>A música já estava no banco</button>
+<button>409 é o código de sucesso do RESTHeart</button>
+<button>O teste ignora todos os status</button>
+<button>O Deezer se recusou a enviar a música</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="1" data-why="O GET depois do DELETE espera 404, provando que o documento não existe mais.">
+<p>O que o "GET Música excluída (404)" prova?</p>
+<button>Que o servidor caiu</button>
+<button>Que o DELETE removeu mesmo o documento</button>
+<button>Que o id foi digitado errado</button>
+<button>Que a coleção foi apagada</button>
+<div class="fb"></div></div>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

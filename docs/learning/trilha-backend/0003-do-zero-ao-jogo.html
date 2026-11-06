@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backend 3: From zero to a game</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Backend 3: From zero to a game</h1>
+<p class="lede">Win: start the project from an empty database, exactly like the professor will (<code>docker compose up -d</code> and nothing else), and tick every requirement on the way. Do it once now, and again after the branches are merged.</p>
+
+<h2>1. The checklist</h2>
+<div class="task">
+<p>Run from the repo root. Tick each line only when you see the expected result.</p>
+<table>
+<tr><th>#</th><th>Do</th><th>Expect</th></tr>
+<tr><td>1</td><td><code>docker compose down -v</code></td><td>Containers and the <code>dados-mongo</code> volume removed (the database is now empty).</td></tr>
+<tr><td>2</td><td><code>docker compose up -d</code>, then <code>docker compose ps</code></td><td><code>mongodb</code>, <code>restheart</code> and <code>frontend</code> running.</td></tr>
+<tr><td>3</td><td>Open <a href="http://localhost:3000">http://localhost:3000</a> with F12 → Network open</td><td><code>GET musica?pagesize=1</code> 404, then <code>PUT musica</code> 201 (same for <code>artista</code>). The list says the database is empty.</td></tr>
+<tr><td>4</td><td>Importar: pick a genre, click Importar</td><td>Green message "100 música(s) nova(s), 0 já estava(m)". The dashboard shows 100 songs.</td></tr>
+<tr><td>5</td><td>Import the same genre again</td><td>"0 música(s) nova(s), 100 já estava(m)". Nothing duplicated.</td></tr>
+<tr><td>6</td><td>Play an 8-song game</td><td>The winner appears with 1 win; ranking and charts change by themselves.</td></tr>
+<tr><td>7</td><td>Send the form empty, then add a song</td><td>The list of errors first; then a 201 and the song in the list.</td></tr>
+<tr><td>8</td><td>Edit that song, then delete it</td><td>GET by id + PUT (200); DELETE (204) after the confirmation.</td></tr>
+<tr><td>9</td><td>Search and filters</td><td>Typing part of an artist filters the list; the genre and origin filters work.</td></tr>
+<tr><td>10</td><td>Postman: run the collection (lesson 2)</td><td>All tests pass.</td></tr>
+<tr><td>11</td><td><code>docker compose down</code>, then <code>up -d</code></td><td>The songs and wins are still there (named volume).</td></tr>
+</table>
+</div>
+
+<h2>2. If something goes wrong</h2>
+<table>
+<tr><th>Symptom</th><th>Cause and fix</th></tr>
+<tr><td><code>Bind for 0.0.0.0:27017 failed: port is already allocated</code></td><td>Another container or MongoDB uses that port (common if you have another project running). <code>docker ps</code> shows who; stop it with <code>docker stop &lt;name&gt;</code>. The 27017 port is only for Compass, so you can also change its left number.</td></tr>
+<tr><td>Same error for 8080 or 3000</td><td>Change only the left number. For 8080, also change <code>API</code> at the top of <code>frontend/app.js</code>.</td></tr>
+<tr><td>"Erro: Failed to fetch (o banco está rodando?...)"</td><td>RESTHeart was still starting. Wait 10 seconds, reload.</td></tr>
+<tr><td>"Erro ao carregar gêneros do Deezer"</td><td>No internet, or the page was opened from disk instead of <code>localhost:3000</code> (no proxy).</td></tr>
+<tr><td>Import stops halfway with an HTTP error</td><td>Read the status in the message. Run it again: songs already saved count as 409 and are skipped.</td></tr>
+</table>
+
+<h2>3. What is left after this track</h2>
+<p>The README has three blanks the group fills later: member names, dashboard screenshots, and the conclusion drawn from the data. After the merge, all three do base lesson 5 together.</p>
+
+<h2>4. Check yourself</h2>
+<div class="quiz" data-answer="3" data-why="The first visit gets 404 on the collection and creates it with PUT; no manual step is needed.">
+<p>Who creates the <code>musica</code> collection on a fresh start?</p>
+<button>The professor, with a PUT in Postman</button>
+<button>MongoDB, when the container starts</button>
+<button>docker-compose.yml, through a volume</button>
+<button>The page, with a PUT after a 404</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="1" data-why="Every song's _id is Deezer's id, so the second import gets 409 for all of them.">
+<p>Why does importing the same genre twice add nothing?</p>
+<button>The app remembers genres in the browser</button>
+<button>Each _id already exists, so each POST gets 409</button>
+<button>Deezer returns an empty chart the second time</button>
+<button>RESTHeart blocks two imports per minute</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="down keeps named volumes; only down -v removes them.">
+<p>After <code>docker compose down</code> and <code>up -d</code>, the songs are still there. Why?</p>
+<button>The named volume was not removed</button>
+<button>The browser cached every song</button>
+<button>RESTHeart reimports them on start</button>
+<button>The images contain the data</button>
+<div class="fb"></div></div>
+</section>
+
+<section lang="pt-BR">
+<h1>Backend 3: Do zero ao jogo</h1>
+<p class="lede">Objetivo: subir o projeto com o banco vazio, do jeito que o professor vai fazer (<code>docker compose up -d</code> e mais nada), e marcar cada requisito no caminho. Faça uma vez agora, e de novo depois que as branches forem mescladas.</p>
+
+<h2>1. O checklist</h2>
+<div class="task">
+<p>Rode na raiz do repositório. Marque cada linha só quando vir o resultado esperado.</p>
+<table>
+<tr><th>#</th><th>Faça</th><th>Esperado</th></tr>
+<tr><td>1</td><td><code>docker compose down -v</code></td><td>Contêineres e o volume <code>dados-mongo</code> removidos (o banco agora está vazio).</td></tr>
+<tr><td>2</td><td><code>docker compose up -d</code> e depois <code>docker compose ps</code></td><td><code>mongodb</code>, <code>restheart</code> e <code>frontend</code> rodando.</td></tr>
+<tr><td>3</td><td>Abra <a href="http://localhost:3000">http://localhost:3000</a> com F12 → Network aberto</td><td><code>GET musica?pagesize=1</code> 404, depois <code>PUT musica</code> 201 (o mesmo para <code>artista</code>). A lista diz que o banco está vazio.</td></tr>
+<tr><td>4</td><td>Importar: escolha um gênero e clique em Importar</td><td>Mensagem verde "100 música(s) nova(s), 0 já estava(m)". O painel mostra 100 músicas.</td></tr>
+<tr><td>5</td><td>Importe o mesmo gênero de novo</td><td>"0 música(s) nova(s), 100 já estava(m)". Nada duplicado.</td></tr>
+<tr><td>6</td><td>Jogue uma partida de 8 músicas</td><td>A vencedora aparece com 1 vitória; ranking e gráficos mudam sozinhos.</td></tr>
+<tr><td>7</td><td>Envie o formulário vazio, depois adicione uma música</td><td>Primeiro a lista de erros; depois um 201 e a música na lista.</td></tr>
+<tr><td>8</td><td>Edite essa música e depois exclua</td><td>GET por id + PUT (200); DELETE (204) depois da confirmação.</td></tr>
+<tr><td>9</td><td>Busca e filtros</td><td>Digitar parte de um artista filtra a lista; os filtros de gênero e origem funcionam.</td></tr>
+<tr><td>10</td><td>Postman: rode a coleção (aula 2)</td><td>Todos os testes passam.</td></tr>
+<tr><td>11</td><td><code>docker compose down</code> e depois <code>up -d</code></td><td>As músicas e vitórias continuam lá (volume nomeado).</td></tr>
+</table>
+</div>
+
+<h2>2. Se algo der errado</h2>
+<table>
+<tr><th>Sintoma</th><th>Causa e solução</th></tr>
+<tr><td><code>Bind for 0.0.0.0:27017 failed: port is already allocated</code></td><td>Outro contêiner ou MongoDB usa essa porta (comum se você tem outro projeto rodando). O <code>docker ps</code> mostra quem; pare com <code>docker stop &lt;nome&gt;</code>. A porta 27017 só serve para o Compass, então você também pode trocar o número da esquerda.</td></tr>
+<tr><td>O mesmo erro para 8080 ou 3000</td><td>Troque só o número da esquerda. Para a 8080, troque também a <code>API</code> no topo do <code>frontend/app.js</code>.</td></tr>
+<tr><td>"Erro: Failed to fetch (o banco está rodando?...)"</td><td>O RESTHeart ainda estava subindo. Espere 10 segundos e recarregue.</td></tr>
+<tr><td>"Erro ao carregar gêneros do Deezer"</td><td>Sem internet, ou a página foi aberta do disco em vez de <code>localhost:3000</code> (sem proxy).</td></tr>
+<tr><td>A importação para no meio com um erro HTTP</td><td>Leia o status na mensagem. Rode de novo: as músicas já salvas dão 409 e são puladas.</td></tr>
+</table>
+
+<h2>3. O que falta depois desta trilha</h2>
+<p>O README tem três lacunas que o grupo preenche depois: nomes dos integrantes, prints do painel e a conclusão tirada dos dados. Depois do merge, os três fazem juntos a aula base 5.</p>
+
+<h2>4. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="3" data-why="A primeira visita recebe 404 na coleção e a cria com PUT; não precisa de passo manual.">
+<p>Quem cria a coleção <code>musica</code> quando tudo começa do zero?</p>
+<button>O professor, com um PUT no Postman</button>
+<button>O MongoDB, quando o contêiner sobe</button>
+<button>O docker-compose.yml, por um volume</button>
+<button>A página, com um PUT depois de um 404</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="1" data-why="O _id de cada música é o id do Deezer, então a segunda importação recebe 409 em todas.">
+<p>Por que importar o mesmo gênero duas vezes não adiciona nada?</p>
+<button>O app lembra os gêneros no navegador</button>
+<button>Cada _id já existe, então cada POST recebe 409</button>
+<button>O Deezer devolve um chart vazio na segunda vez</button>
+<button>O RESTHeart bloqueia duas importações por minuto</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="O down mantém os volumes nomeados; só o down -v os remove.">
+<p>Depois de <code>docker compose down</code> e <code>up -d</code>, as músicas continuam lá. Por quê?</p>
+<button>O volume nomeado não foi removido</button>
+<button>O navegador guardou todas as músicas</button>
+<button>O RESTHeart reimporta tudo ao subir</button>
+<button>As imagens contêm os dados</button>
+<div class="fb"></div></div>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

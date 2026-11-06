@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 5: Presentation rehearsal</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Lesson 5: Presentation rehearsal</h1>
+<p class="lede">Win: the three of you run the 7-minute demo once, with the environment started from zero, and each one can answer the likely questions about their part. Do this after all three tracks are finished and merged into <code>master</code>.</p>
+
+<h2>1. Who shows what</h2>
+<p>The assignment asks for a live demo of about 7 minutes, with the environment running in Docker and the five HTTP methods shown. Each part is about 2 minutes, leaving 1 minute spare.</p>
+<table>
+<tr><th>Who</th><th>Shows</th></tr>
+<tr><td><b>Database</b></td><td>
+<code>docker compose up -d</code> and <code>docker compose ps</code> (three services running). Explains the named volume <code>dados-mongo</code>.
+In MongoDB Compass: database <code>restheart</code>, collection <code>musica</code> with 30+ documents. Opens one document and shows the embedded <code>artista</code>, and the <code>artista</code> collection referenced by <code>id_artista</code>.</td></tr>
+<tr><td><b>Backend</b></td><td>
+In the app: imports a genre (GET on Deezer through the proxy, POST on the database) and reads the message "x new, y already in the database".
+In Postman: runs the collection with <b>Run</b>. The results show GET, POST, PUT, PATCH and DELETE with 200, 201, 204 and the 404 after the delete (and 409 on the first POST if that song was already imported).</td></tr>
+<tr><td><b>Frontend</b></td><td>
+Plays an 8-song game (the winner gets a PATCH with <code>$inc</code>) and shows the dashboard updating by itself.
+Submits the form empty (validation), adds a song (POST), edits it (GET by id + PUT), deletes it (DELETE with confirmation).
+Opens device mode (F12, then Ctrl+Shift+M) to show the phone layout, and explains that nginx serves the <code>frontend/</code> folder and the <code>/deezer</code> proxy.</td></tr>
+</table>
+
+<h2>2. The night before (on the machine you will present with)</h2>
+<div class="task">
+<ol>
+<li><code>git checkout master</code> and <code>git pull</code>, after the branches are merged.</li>
+<li><code>docker compose down -v</code>, then <code>docker compose up -d</code>. This proves the project starts from zero, and downloads the images now instead of during the demo.</li>
+<li>Open <a href="http://localhost:3000">http://localhost:3000</a> and import <b>two</b> genres, so the genre chart has more than one slice.</li>
+<li>Play 3 or 4 short games, so the ranking and the bar chart have data.</li>
+<li>Postman: import <code>postman/colecao.json</code> and run it once.</li>
+<li>Compass: connect once to <code>mongodb://localhost:27017</code>.</li>
+<li>Run the whole demo once, with a timer.</li>
+<li><b>Do not</b> run <code>down -v</code> after the rehearsal. Use <code>docker compose down</code> (keeps the data) or just leave it running.</li>
+</ol>
+<p>On the day, open these before you start: a terminal in the repo folder, the browser on the app, Postman, and Compass.</p>
+</div>
+
+<h2>3. Likely questions</h2>
+<p><b>Database</b></p>
+<ul>
+<li><i>Relational vs document database?</i> A table has fixed columns and relations use JOIN. A document is JSON that can carry objects and lists inside it, and documents in the same collection may have different fields.</li>
+<li><i>Why is the artist name inside the song?</i> It appears in every list and every round, so it comes with the song in one read. The photo is rarely needed, so it stays in <code>artista</code>.</li>
+<li><i>And if the artist changes name?</i> Every song by that artist would need updating. That is the cost of embedding, and it is acceptable because it is rare.</li>
+<li><i>Why do the data survive a restart?</i> They live in the named volume <code>dados-mongo</code>, outside the container. Only <code>down -v</code> deletes it.</li>
+<li><i>What is <code>_etag</code>?</i> A field RESTHeart adds to each document to mark its version. We do not use it.</li>
+</ul>
+<p><b>Backend</b></p>
+<ul>
+<li><i>PUT vs PATCH?</i> PUT replaces the whole document; PATCH changes only the fields sent (or uses operators like <code>$inc</code>).</li>
+<li><i>Why does the import ignore 409?</i> The song id is Deezer's id, so 409 means "already saved". That is how importing twice never duplicates.</li>
+<li><i>Why <code>?id_type=NUMBER</code>?</i> The <code>_id</code> is a number, and without it RESTHeart looks for the text, answering 404.</li>
+<li><i>Why the nginx proxy?</i> Deezer does not send <code>Access-Control-Allow-Origin</code>, so the browser blocks a direct <code>fetch</code>.</li>
+<li><i>Why check <code>res.ok</code>?</i> <code>fetch</code> does not throw on 404 or 500.</li>
+</ul>
+<p><b>Frontend</b></p>
+<ul>
+<li><i>How does the dashboard update by itself?</i> After every POST, PUT, PATCH or DELETE, the app lists the songs again (<code>recarregar</code>) and recalculates everything.</li>
+<li><i>How does the layout change on a phone?</i> A media query (<code>@media (max-width: 600px)</code>) changes a few rules below that width; the grids adapt on their own with <code>auto-fit</code>.</li>
+<li><i>What does <code>:ro</code> do in the volume?</i> The container can read the files but not change them.</li>
+<li><i>Who calls <code>localhost:8080</code>?</i> The browser, not the nginx container.</li>
+</ul>
+<p><b>Everyone</b>: where was AI used? See <code>docs/uso_de_ia.md</code>.</p>
+
+<h2>4. If something goes wrong</h2>
+<table>
+<tr><th>Symptom</th><th>Fix</th></tr>
+<tr><td><code>port is already allocated</code></td><td>Another program uses that port. Close it, or change only the left number in <code>docker-compose.yml</code>. If you change 8080, also change <code>API</code> at the top of <code>frontend/app.js</code>.</td></tr>
+<tr><td>Red message "Erro: Failed to fetch" right after <code>up -d</code></td><td>RESTHeart takes a few seconds to start. Wait 10 seconds and reload.</td></tr>
+<tr><td>Genres do not load / import fails</td><td>No internet or Deezer is down. Use the songs imported the night before; everything else works.</td></tr>
+<tr><td>Charts missing, rest of dashboard fine</td><td>Chart.js comes from the internet. Check the connection and reload.</td></tr>
+<tr><td>Page looks old or unstyled</td><td>Ctrl+F5 (reload without cache).</td></tr>
+<tr><td>403 Forbidden on localhost:3000</td><td>Compose was started from the wrong folder. Run it from the repo root.</td></tr>
+</table>
+
+<h2>5. Check yourself</h2>
+<div class="quiz" data-answer="2" data-why="down -v deletes the named volume, so the imported songs and the ranking would be gone.">
+<p>After the rehearsal, which command must you <b>not</b> run before the demo?</p>
+<button>docker compose ps</button>
+<button>docker compose down</button>
+<button>docker compose down -v</button>
+<button>docker compose logs -f restheart</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="The winner's vitorias goes up by 1 with $inc, without reading the current value.">
+<p>Which HTTP method does finishing a game send?</p>
+<button>PATCH, with $inc on vitorias</button>
+<button>PUT, with the whole document</button>
+<button>POST, creating a new song</button>
+<button>DELETE, removing the losers</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="Postman runs every request, so all five methods and their status codes appear in one screen.">
+<p>What is the fastest way to show all five methods with their status codes?</p>
+<button>Open each URL in the browser bar</button>
+<button>Read the docker compose logs</button>
+<button>Show the documents in Compass</button>
+<button>Run the Postman collection with Run</button>
+<div class="fb"></div></div>
+</section>
+
+<section lang="pt-BR">
+<h1>Aula 5: Ensaio da apresentação</h1>
+<p class="lede">Objetivo: os três rodam a demonstração de 7 minutos uma vez, com o ambiente subindo do zero, e cada um consegue responder às perguntas prováveis sobre a sua parte. Faça depois que as três trilhas estiverem terminadas e mescladas na <code>master</code>.</p>
+
+<h2>1. Quem mostra o quê</h2>
+<p>O trabalho pede uma demonstração ao vivo de uns 7 minutos, com o ambiente rodando no Docker e os cinco métodos HTTP. Cada parte tem uns 2 minutos, sobrando 1 minuto.</p>
+<table>
+<tr><th>Quem</th><th>Mostra</th></tr>
+<tr><td><b>Banco</b></td><td>
+<code>docker compose up -d</code> e <code>docker compose ps</code> (três serviços rodando). Explica o volume nomeado <code>dados-mongo</code>.
+No MongoDB Compass: banco <code>restheart</code>, coleção <code>musica</code> com 30+ documentos. Abre um documento e mostra o <code>artista</code> embutido, e a coleção <code>artista</code> referenciada pelo <code>id_artista</code>.</td></tr>
+<tr><td><b>Backend</b></td><td>
+No app: importa um gênero (GET no Deezer pelo proxy, POST no banco) e lê a mensagem "x novas, y já estavam no banco".
+No Postman: roda a coleção com <b>Run</b>. O resultado mostra GET, POST, PUT, PATCH e DELETE com 200, 201, 204 e o 404 depois do delete (e 409 no primeiro POST se aquela música já tinha sido importada).</td></tr>
+<tr><td><b>Frontend</b></td><td>
+Joga uma partida de 8 músicas (a vencedora recebe um PATCH com <code>$inc</code>) e mostra o painel se atualizando sozinho.
+Envia o formulário vazio (validação), adiciona uma música (POST), edita (GET por id + PUT) e exclui (DELETE com confirmação).
+Abre o modo dispositivo (F12, depois Ctrl+Shift+M) para mostrar o layout no celular, e explica que o nginx serve a pasta <code>frontend/</code> e o proxy <code>/deezer</code>.</td></tr>
+</table>
+
+<h2>2. Na noite anterior (na máquina da apresentação)</h2>
+<div class="task">
+<ol>
+<li><code>git checkout master</code> e <code>git pull</code>, depois que as branches forem mescladas.</li>
+<li><code>docker compose down -v</code> e depois <code>docker compose up -d</code>. Isso prova que o projeto sobe do zero, e baixa as imagens agora, não durante a apresentação.</li>
+<li>Abra <a href="http://localhost:3000">http://localhost:3000</a> e importe <b>dois</b> gêneros, para o gráfico de gêneros ter mais de uma fatia.</li>
+<li>Jogue 3 ou 4 partidas curtas, para o ranking e o gráfico de barras terem dados.</li>
+<li>Postman: importe o <code>postman/colecao.json</code> e rode uma vez.</li>
+<li>Compass: conecte uma vez em <code>mongodb://localhost:27017</code>.</li>
+<li>Rode a apresentação inteira uma vez, cronometrando.</li>
+<li><b>Não</b> rode <code>down -v</code> depois do ensaio. Use <code>docker compose down</code> (mantém os dados) ou deixe rodando.</li>
+</ol>
+<p>No dia, abra antes de começar: um terminal na pasta do repositório, o navegador no app, o Postman e o Compass.</p>
+</div>
+
+<h2>3. Perguntas prováveis</h2>
+<p><b>Banco</b></p>
+<ul>
+<li><i>Banco relacional x banco de documentos?</i> Uma tabela tem colunas fixas e as relações usam JOIN. Um documento é um JSON que pode ter objetos e listas dentro, e documentos da mesma coleção podem ter campos diferentes.</li>
+<li><i>Por que o nome do artista fica dentro da música?</i> Ele aparece em toda listagem e em todo round, então vem junto com a música em uma leitura só. A foto quase nunca é usada, então fica em <code>artista</code>.</li>
+<li><i>E se o artista mudar de nome?</i> Todas as músicas dele teriam que ser atualizadas. É o custo de embutir, e vale a pena porque é raro.</li>
+<li><i>Por que os dados sobrevivem a um reinício?</i> Eles ficam no volume nomeado <code>dados-mongo</code>, fora do contêiner. Só o <code>down -v</code> apaga.</li>
+<li><i>O que é o <code>_etag</code>?</i> Um campo que o RESTHeart coloca em cada documento para marcar a versão. Não usamos.</li>
+</ul>
+<p><b>Backend</b></p>
+<ul>
+<li><i>PUT x PATCH?</i> O PUT substitui o documento inteiro; o PATCH altera só os campos enviados (ou usa operadores como <code>$inc</code>).</li>
+<li><i>Por que a importação ignora o 409?</i> O id da música é o id do Deezer, então 409 significa "já está salva". É assim que importar duas vezes nunca duplica.</li>
+<li><i>Por que <code>?id_type=NUMBER</code>?</i> O <code>_id</code> é um número, e sem isso o RESTHeart procura o texto e responde 404.</li>
+<li><i>Por que o proxy do nginx?</i> O Deezer não envia <code>Access-Control-Allow-Origin</code>, então o navegador bloqueia um <code>fetch</code> direto.</li>
+<li><i>Por que conferir <code>res.ok</code>?</i> O <code>fetch</code> não lança erro em 404 ou 500.</li>
+</ul>
+<p><b>Frontend</b></p>
+<ul>
+<li><i>Como o painel se atualiza sozinho?</i> Depois de todo POST, PUT, PATCH ou DELETE, o app lista as músicas de novo (<code>recarregar</code>) e recalcula tudo.</li>
+<li><i>Como o layout muda no celular?</i> Uma media query (<code>@media (max-width: 600px)</code>) muda algumas regras abaixo dessa largura; os grids se ajustam sozinhos com <code>auto-fit</code>.</li>
+<li><i>O que o <code>:ro</code> faz no volume?</i> O contêiner pode ler os arquivos, mas não alterá-los.</li>
+<li><i>Quem chama o <code>localhost:8080</code>?</i> O navegador, não o contêiner do nginx.</li>
+</ul>
+<p><b>Todos</b>: onde a IA foi usada? Ver <code>docs/uso_de_ia.md</code>.</p>
+
+<h2>4. Se der errado</h2>
+<table>
+<tr><th>Sintoma</th><th>Solução</th></tr>
+<tr><td><code>port is already allocated</code></td><td>Outro programa usa essa porta. Feche-o, ou troque só o número da esquerda no <code>docker-compose.yml</code>. Se trocar a 8080, troque também a <code>API</code> no topo do <code>frontend/app.js</code>.</td></tr>
+<tr><td>Mensagem vermelha "Erro: Failed to fetch" logo depois do <code>up -d</code></td><td>O RESTHeart leva alguns segundos para subir. Espere 10 segundos e recarregue.</td></tr>
+<tr><td>Gêneros não carregam / importação falha</td><td>Sem internet ou o Deezer fora do ar. Use as músicas importadas na noite anterior; o resto funciona.</td></tr>
+<tr><td>Gráficos sumiram, resto do painel normal</td><td>O Chart.js vem da internet. Confira a conexão e recarregue.</td></tr>
+<tr><td>Página com cara antiga ou sem estilo</td><td>Ctrl+F5 (recarrega sem cache).</td></tr>
+<tr><td>403 Forbidden no localhost:3000</td><td>O compose foi iniciado na pasta errada. Rode a partir da raiz do repositório.</td></tr>
+</table>
+
+<h2>5. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="2" data-why="O down -v apaga o volume nomeado, então as músicas importadas e o ranking sumiriam.">
+<p>Depois do ensaio, qual comando você <b>não</b> deve rodar antes da apresentação?</p>
+<button>docker compose ps</button>
+<button>docker compose down</button>
+<button>docker compose down -v</button>
+<button>docker compose logs -f restheart</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="O vitorias da vencedora sobe 1 com $inc, sem precisar ler o valor atual.">
+<p>Qual método HTTP o fim de uma partida envia?</p>
+<button>PATCH, com $inc em vitorias</button>
+<button>PUT, com o documento inteiro</button>
+<button>POST, criando uma música nova</button>
+<button>DELETE, removendo as perdedoras</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="O Postman roda todas as requisições, então os cinco métodos e seus status aparecem em uma tela só.">
+<p>Qual é o jeito mais rápido de mostrar os cinco métodos com seus códigos de status?</p>
+<button>Abrir cada URL na barra do navegador</button>
+<button>Ler os logs do docker compose</button>
+<button>Mostrar os documentos no Compass</button>
+<button>Rodar a coleção do Postman com Run</button>
+<div class="fb"></div></div>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

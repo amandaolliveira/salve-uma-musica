@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 4: The frontend and the Deezer proxy</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Lesson 4: The frontend and the Deezer proxy</h1>
+<p class="lede">Win: explain why the browser cannot call Deezer directly, how the nginx container fixes it, and follow one import through <code>app.js</code>. Needs lessons 1 to 3 done.</p>
+
+<h2>1. The third service</h2>
+<p>The <code>docker-compose.yml</code> now has a <code>frontend</code> service (nginx). It serves the <code>frontend/</code> folder at <a href="http://localhost:3000">http://localhost:3000</a> and is what earns the +1.0 extra point.</p>
+<pre>frontend:
+  image: nginx:alpine
+  ports:
+    - "3000:80"                                    # host 3000 -> nginx 80
+  volumes:
+    - ./frontend:/usr/share/nginx/html:ro          # the site files
+    - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro   # the proxy</pre>
+<p>The <code>fetch</code> calls in <code>app.js</code> still point to <code>http://localhost:8080</code>, because the request is made by <i>your browser</i>, not by the container.</p>
+
+<h2>2. CORS: the rule Postman ignores</h2>
+<p>A page from one origin (here <code>http://localhost:3000</code>) may only read a response from another origin if that server answers with the header <code>Access-Control-Allow-Origin</code>. Otherwise the browser blocks it. (<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS">MDN: CORS</a>)</p>
+<ul>
+<li><b>RESTHeart</b> sends the header, so the page can talk to it directly.</li>
+<li><b>Deezer</b> does not. A <code>fetch('https://api.deezer.com/genre')</code> from the page fails, even though the same URL opens fine in the address bar (opening a page is not a <code>fetch</code>) and in Postman (which has no CORS rule).</li>
+</ul>
+
+<h2>3. The proxy</h2>
+<p>If the page calls its own origin, there is no CORS check. So nginx answers <code>/deezer/...</code> and forwards it to Deezer (<code>nginx/default.conf</code>, <a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html">nginx docs: proxy module</a>):</p>
+<pre>location /deezer/ {
+    set $deezer https://api.deezer.com;
+    rewrite ^/deezer/(.*)$ /$1 break;   # /deezer/genre -> /genre
+    proxy_pass $deezer;
+    ...
+}</pre>
+<p>In <code>app.js</code> that is the line <code>const DEEZER = '/deezer';</code>. It is also why the import only works through the container: opening <code>index.html</code> straight from disk has no nginx behind it.</p>
+
+<h2>4. Follow one import in app.js</h2>
+<pre>importar(idGenero, nomeGenero)
+  deezer('/chart/152/tracks?limit=100')   GET through the proxy
+  documentoDaFaixa(faixa, 'Rock')         Deezer track -> our document
+  inserir('artista', ...)                 POST, 201 new or 409 already there
+  inserir('musica', ...)                  POST, 201 new or 409 already there
+recarregar()
+  listarMusicas()                         GET /musica?pagesize=1000
+  renderizarLista(), renderizarPainel()   list and dashboard recalculated</pre>
+<p>Requests to the database go through <code>requisicao()</code>, which checks <code>res.ok</code> (<code>inserir()</code> checks the status itself, because 409 is expected there). That check is needed because <code>fetch</code> does not throw on 404 or 500, only on network failures. When it fails, the message shows the HTTP status.</p>
+
+<h2>5. Try it</h2>
+<div class="task">
+<p>With <code>docker compose up -d</code> running:</p>
+<ol>
+<li>Open <a href="http://localhost:3000/deezer/genre">http://localhost:3000/deezer/genre</a>. You get Deezer's JSON through nginx.</li>
+<li>See the missing header yourself. In PowerShell:
+<pre>curl.exe -s -D - -o NUL -H "Origin: http://localhost:3000" https://api.deezer.com/genre</pre>
+There are several <code>Access-Control-...</code> lines, but no <code>Access-Control-Allow-Origin</code>.</li>
+<li>Open <a href="http://localhost:3000">http://localhost:3000</a>, press F12, go to <b>Console</b> and run each line:
+<pre>await fetch('https://api.deezer.com/genre')                 // CORS error
+(await (await fetch('/deezer/genre')).json()).data.length   // a number</pre></li>
+</ol>
+</div>
+
+<h2>6. Check yourself</h2>
+<div class="quiz" data-answer="1" data-why="CORS is enforced by browsers. Postman is not a browser page, so it never checks the header.">
+<p>Why did the Deezer requests work in Postman but not in the page?</p>
+<button>Postman sends a secret Deezer key</button>
+<button>Postman does not apply the CORS rule</button>
+<button>Deezer blocks every request from Windows</button>
+<button>The page uses the wrong HTTP method</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="The page calls its own origin (/deezer/...), so the browser has nothing to check; nginx talks to Deezer server to server.">
+<p>How does the proxy avoid the CORS block?</p>
+<button>It adds a password to every request</button>
+<button>It turns the GET into a POST</button>
+<button>It stores Deezer's data in MongoDB first</button>
+<button>The page only calls its own origin</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="fetch only rejects on network errors; a 404 is a normal response, so res.ok must be checked.">
+<p>A request returns 404. What does <code>fetch</code> do on its own?</p>
+<button>Resolves normally; you must check res.ok</button>
+<button>Throws an error that goes to catch</button>
+<button>Retries the request three times</button>
+<button>Reloads the page automatically</button>
+<div class="fb"></div></div>
+</section>
+
+<section lang="pt-BR">
+<h1>Aula 4: O frontend e o proxy do Deezer</h1>
+<p class="lede">Objetivo: explicar por que o navegador não consegue chamar o Deezer direto, como o contêiner nginx resolve isso, e seguir uma importação pelo <code>app.js</code>. Precisa das aulas 1 a 3 concluídas.</p>
+
+<h2>1. O terceiro serviço</h2>
+<p>O <code>docker-compose.yml</code> agora tem um serviço <code>frontend</code> (nginx). Ele serve a pasta <code>frontend/</code> em <a href="http://localhost:3000">http://localhost:3000</a> e é o que garante o ponto extra (+1,0).</p>
+<pre>frontend:
+  image: nginx:alpine
+  ports:
+    - "3000:80"                                    # host 3000 -> nginx 80
+  volumes:
+    - ./frontend:/usr/share/nginx/html:ro          # os arquivos do site
+    - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro   # o proxy</pre>
+<p>Os <code>fetch</code> do <code>app.js</code> continuam apontando para <code>http://localhost:8080</code>, porque quem faz a requisição é o <i>seu navegador</i>, não o contêiner.</p>
+
+<h2>2. CORS: a regra que o Postman ignora</h2>
+<p>Uma página de uma origem (aqui <code>http://localhost:3000</code>) só pode ler a resposta de outra origem se esse servidor responder com o cabeçalho <code>Access-Control-Allow-Origin</code>. Senão o navegador bloqueia. (<a href="https://developer.mozilla.org/pt-BR/docs/Web/HTTP/CORS">MDN: CORS</a>)</p>
+<ul>
+<li>O <b>RESTHeart</b> envia o cabeçalho, então a página fala com ele direto.</li>
+<li>O <b>Deezer</b> não envia. Um <code>fetch('https://api.deezer.com/genre')</code> a partir da página falha, mesmo que a mesma URL abra normalmente na barra de endereço (abrir uma página não é um <code>fetch</code>) e no Postman (que não tem a regra de CORS).</li>
+</ul>
+
+<h2>3. O proxy</h2>
+<p>Se a página chama a própria origem, não há verificação de CORS. Então o nginx responde <code>/deezer/...</code> e repassa para o Deezer (<code>nginx/default.conf</code>, <a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html">documentação do nginx: proxy</a>, em inglês):</p>
+<pre>location /deezer/ {
+    set $deezer https://api.deezer.com;
+    rewrite ^/deezer/(.*)$ /$1 break;   # /deezer/genre -> /genre
+    proxy_pass $deezer;
+    ...
+}</pre>
+<p>No <code>app.js</code> isso é a linha <code>const DEEZER = '/deezer';</code>. É também por isso que a importação só funciona pelo contêiner: abrindo o <code>index.html</code> direto do disco não há nginx por trás.</p>
+
+<h2>4. Siga uma importação no app.js</h2>
+<pre>importar(idGenero, nomeGenero)
+  deezer('/chart/152/tracks?limit=100')   GET pelo proxy
+  documentoDaFaixa(faixa, 'Rock')         faixa do Deezer -> nosso documento
+  inserir('artista', ...)                 POST, 201 novo ou 409 já existe
+  inserir('musica', ...)                  POST, 201 novo ou 409 já existe
+recarregar()
+  listarMusicas()                         GET /musica?pagesize=1000
+  renderizarLista(), renderizarPainel()   lista e painel recalculados</pre>
+<p>As requisições ao banco passam pela <code>requisicao()</code>, que confere <code>res.ok</code> (a <code>inserir()</code> confere o status ela mesma, porque ali o 409 é esperado). Essa conferência é necessária porque o <code>fetch</code> não lança erro em 404 ou 500, só em falha de rede. Quando falha, a mensagem mostra o status HTTP.</p>
+
+<h2>5. Experimente</h2>
+<div class="task">
+<p>Com o <code>docker compose up -d</code> rodando:</p>
+<ol>
+<li>Abra <a href="http://localhost:3000/deezer/genre">http://localhost:3000/deezer/genre</a>. Você recebe o JSON do Deezer passando pelo nginx.</li>
+<li>Veja o cabeçalho que falta. No PowerShell:
+<pre>curl.exe -s -D - -o NUL -H "Origin: http://localhost:3000" https://api.deezer.com/genre</pre>
+Aparecem várias linhas <code>Access-Control-...</code>, mas nenhuma <code>Access-Control-Allow-Origin</code>.</li>
+<li>Abra <a href="http://localhost:3000">http://localhost:3000</a>, aperte F12, vá em <b>Console</b> e rode cada linha:
+<pre>await fetch('https://api.deezer.com/genre')                 // erro de CORS
+(await (await fetch('/deezer/genre')).json()).data.length   // um número</pre></li>
+</ol>
+</div>
+
+<h2>6. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="1" data-why="O CORS é aplicado pelos navegadores. O Postman não é uma página do navegador, então nunca confere o cabeçalho.">
+<p>Por que as requisições ao Deezer funcionaram no Postman e não na página?</p>
+<button>O Postman envia uma chave secreta do Deezer</button>
+<button>O Postman não aplica a regra de CORS</button>
+<button>O Deezer bloqueia toda requisição do Windows</button>
+<button>A página usa o método HTTP errado</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="A página chama a própria origem (/deezer/...), então o navegador não tem o que conferir; o nginx fala com o Deezer de servidor para servidor.">
+<p>Como o proxy evita o bloqueio de CORS?</p>
+<button>Ele adiciona uma senha em cada requisição</button>
+<button>Ele transforma o GET em POST</button>
+<button>Ele guarda os dados do Deezer no MongoDB antes</button>
+<button>A página só chama a própria origem</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="O fetch só rejeita em erro de rede; um 404 é uma resposta normal, então é preciso conferir res.ok.">
+<p>Uma requisição retorna 404. O que o <code>fetch</code> faz sozinho?</p>
+<button>Resolve normalmente; você precisa conferir res.ok</button>
+<button>Lança um erro que vai para o catch</button>
+<button>Tenta a requisição de novo três vezes</button>
+<button>Recarrega a página automaticamente</button>
+<div class="fb"></div></div>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

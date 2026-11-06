@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 2: MongoDB and RESTHeart</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Lesson 2: How MongoDB and RESTHeart store your songs</h1>
+<p class="lede">Win: create the <code>musica</code> collection, save one song document, read it back, and explain why <code>PUT</code> and <code>PATCH</code> behave differently. Needs lesson 1 done (containers running).</p>
+
+<h2>1. Documents and collections</h2>
+<p>MongoDB stores <b>documents</b>: JSON-like objects with fields. A <b>collection</b> is a group of documents, roughly what a table is in SQL, except documents in one collection may have different fields.
+(<a href="https://www.mongodb.com/docs/manual/core/document/">MongoDB docs: Documents</a>) The game uses two collections: <code>musica</code> (songs) and <code>artista</code> (artists). One song is one document (the full model is in <code>docs/estrutura_banco.md</code>):</p>
+<pre>{
+  "_id": 518458172,                   // unique key of the document (Deezer's track id)
+  "titulo": "Sweet Child O' Mine",
+  "duracao": 355,                     // number
+  "artista": { "id_artista": 663, "nome_artista": "Guns N' Roses" },   // embedded object
+  "genero": "Rock",
+  "vitorias": 0
+}</pre>
+<p><code>_id</code> is the unique key. Two documents in one collection cannot share it. That is why the project uses Deezer's track ID as <code>_id</code>: the same song can never be saved twice.</p>
+
+<h2>2. What RESTHeart does</h2>
+<p>MongoDB speaks its own protocol, not HTTP. RESTHeart sits in front of it and translates HTTP requests into MongoDB operations.
+(<a href="https://restheart.org/docs/mongodb-rest/tutorial">RESTHeart docs: tutorial</a>) The URL path is the collection, and the method is the operation:</p>
+<pre>PUT    /musica          create the collection
+POST   /musica          insert a document   (201, id in the Location header)
+GET    /musica          list documents
+GET    /musica/123      one document        (200, or 404 if missing)
+PUT    /musica/123      replace a document  (200)
+PATCH  /musica/123      change some fields  (200)
+DELETE /musica/123      remove a document   (204)</pre>
+
+<h2>3. The four traps (tested on this project's RESTHeart)</h2>
+<ul>
+<li><b>POST with an <code>_id</code> that exists gives 409</b> and changes nothing. You cannot "save again" with POST. The import uses this on purpose: a 409 means "already in the database".</li>
+<li><b>PUT replaces the whole document.</b> Send only <code>{"titulo": "x"}</code> and every other field, including <code>vitorias</code>, is wiped. That is why the edit form in <code>app.js</code> sends the full document.</li>
+<li><b>PATCH merges.</b> It changes only the fields you send. <code>{"$inc": {"vitorias": 1}}</code> adds 1 to a number, which is how the game records a win.</li>
+<li><b>The type of <code>_id</code> matters.</b> The text <code>"1"</code> and the number <code>1</code> are different keys. A URL like <code>/musica/1</code> looks for the text, so a document stored with the number answers 404 there, even though it shows in the list. This project keeps the number (as in <code>docs/estrutura_banco.md</code>), so every request by id for an imported song needs <code>?id_type=NUMBER</code>, for example <code>/musica/1?id_type=NUMBER</code>. In <code>app.js</code> this is done in a single function, <code>urlDocumento</code>, so it cannot be forgotten. Songs added by hand have no Deezer id; MongoDB gives them an <code>ObjectId</code>, which needs no extra parameter.</li>
+</ul>
+
+<h2>4. Try it</h2>
+<div class="task">
+<p>Start the containers (<code>docker compose up -d</code>). In Windows PowerShell use <code>curl.exe</code> (plain <code>curl</code> is a different PowerShell command). Create a file <code>doc.json</code> in your scratch folder with a test song:</p>
+<pre>{ "_id": 1, "titulo": "Teste", "duracao": 100, "vitorias": 0 }</pre>
+<pre>curl.exe -i -u admin:secret -X PUT http://localhost:8080/musica
+curl.exe -i -u admin:secret -X POST -H "Content-Type: application/json" -d "@doc.json" http://localhost:8080/musica
+curl.exe -i -u admin:secret http://localhost:8080/musica/1
+curl.exe -u admin:secret "http://localhost:8080/musica/1?id_type=NUMBER"</pre>
+<p>Expect 201 on the first (200 if the app already created the collection) and 201 on the POST. The third answers 404 and the fourth returns your document: that is trap 4. Run the POST a second time and watch the 409. Then delete the test data so it does not pollute your ranking:</p>
+<pre>curl.exe -i -u admin:secret -X DELETE "http://localhost:8080/musica/1?id_type=NUMBER"</pre>
+<p class="note">Confused by a status code? Copy the full output before asking for help. The same requests become point-and-click in Postman next lesson.</p>
+</div>
+
+<h2>5. Check yourself</h2>
+<div class="quiz" data-answer="1" data-why="PUT replaces the whole document, so fields you leave out are deleted.">
+<p>You PUT <code>{"titulo": "x"}</code> on a song that has wins. What happens?</p>
+<button>Only the title changes; vitorias stays</button>
+<button>The whole document is replaced; vitorias vanishes</button>
+<button>The server rejects it with a 409 error</button>
+<button>A second copy of the song is created</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="Duplicate _id on POST is a conflict, and the original stays untouched.">
+<p>You POST a song whose <code>_id</code> already exists. What do you get?</p>
+<button>201 and the song is overwritten</button>
+<button>404 because the song is missing</button>
+<button>204 with no body returned</button>
+<button>409 and the original is unchanged</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="PATCH with $inc changes one number without touching other fields.">
+<p>Which request adds 1 to <code>vitorias</code> and leaves everything else alone?</p>
+<button>PATCH with <code>{"$inc": {"vitorias": 1}}</code></button>
+<button>PUT with <code>{"vitorias": 1}</code></button>
+<button>POST with <code>{"vitorias": 1}</code></button>
+<button>DELETE then POST the song again</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="2" data-why="Without ?id_type=NUMBER, RESTHeart looks for the text &quot;1&quot;, which does not exist.">
+<p>A song was saved with <code>"_id": 1</code> (a number). What does <code>GET /musica/1</code> return?</p>
+<button>200, ids are converted automatically</button>
+<button>409, because the id is a duplicate</button>
+<button>404, it looks for the text "1"</button>
+<button>400, numbers are not allowed as ids</button>
+<div class="fb"></div></div>
+
+<h2>Next</h2>
+<p>Read the <a href="https://restheart.org/docs/mongodb-rest/tutorial">RESTHeart tutorial</a> (primary source for this lesson). Lesson 3 does the same requests in Postman and saves the new document's ID in a variable.</p>
+</section>
+
+<section lang="pt-BR">
+<h1>Aula 2: Como o MongoDB e o RESTHeart guardam suas músicas</h1>
+<p class="lede">Objetivo: criar a coleção <code>musica</code>, salvar um documento de música, lê-lo de volta e explicar por que <code>PUT</code> e <code>PATCH</code> se comportam de forma diferente. Precisa da aula 1 concluída (contêineres rodando).</p>
+
+<h2>1. Documentos e coleções</h2>
+<p>O MongoDB guarda <b>documentos</b>: objetos parecidos com JSON, com campos. Uma <b>coleção</b> é um grupo de documentos, mais ou menos o que uma tabela é no SQL, só que os documentos de uma mesma coleção podem ter campos diferentes.
+(<a href="https://www.mongodb.com/docs/manual/core/document/">Documentação do MongoDB: Documents</a>, em inglês) O jogo usa duas coleções: <code>musica</code> (músicas) e <code>artista</code> (artistas). Uma música é um documento (o modelo completo está em <code>docs/estrutura_banco.md</code>):</p>
+<pre>{
+  "_id": 518458172,                   // chave única do documento (id da faixa no Deezer)
+  "titulo": "Sweet Child O' Mine",
+  "duracao": 355,                     // número
+  "artista": { "id_artista": 663, "nome_artista": "Guns N' Roses" },   // objeto embutido
+  "genero": "Rock",
+  "vitorias": 0
+}</pre>
+<p>O <code>_id</code> é a chave única. Dois documentos da mesma coleção não podem ter o mesmo. Por isso o projeto usa o ID da faixa no Deezer como <code>_id</code>: a mesma música nunca é salva duas vezes.</p>
+
+<h2>2. O que o RESTHeart faz</h2>
+<p>O MongoDB fala o próprio protocolo, não HTTP. O RESTHeart fica na frente dele e traduz requisições HTTP em operações do MongoDB.
+(<a href="https://restheart.org/docs/mongodb-rest/tutorial">Documentação do RESTHeart: tutorial</a>, em inglês) O caminho da URL é a coleção e o método é a operação:</p>
+<pre>PUT    /musica          cria a coleção
+POST   /musica          insere um documento   (201, id no cabeçalho Location)
+GET    /musica          lista os documentos
+GET    /musica/123      um documento          (200, ou 404 se não existir)
+PUT    /musica/123      substitui um documento (200)
+PATCH  /musica/123      altera alguns campos  (200)
+DELETE /musica/123      remove um documento   (204)</pre>
+
+<h2>3. As quatro armadilhas (testadas no RESTHeart deste projeto)</h2>
+<ul>
+<li><b>POST com um <code>_id</code> que já existe retorna 409</b> e não muda nada. Não dá para "salvar de novo" com POST. A importação usa isso de propósito: um 409 significa "já está no banco".</li>
+<li><b>PUT substitui o documento inteiro.</b> Se você enviar só <code>{"titulo": "x"}</code>, todos os outros campos, inclusive <code>vitorias</code>, são apagados. Por isso o formulário de edição do <code>app.js</code> envia o documento completo.</li>
+<li><b>PATCH mescla.</b> Ele altera apenas os campos enviados. <code>{"$inc": {"vitorias": 1}}</code> soma 1 a um número, e é assim que o jogo registra uma vitória.</li>
+<li><b>O tipo do <code>_id</code> importa.</b> O texto <code>"1"</code> e o número <code>1</code> são chaves diferentes. Uma URL como <code>/musica/1</code> procura o texto, então um documento guardado com o número responde 404 ali, mesmo aparecendo na lista. Este projeto mantém o número (como no <code>docs/estrutura_banco.md</code>), então toda requisição por id de uma música importada precisa de <code>?id_type=NUMBER</code>, por exemplo <code>/musica/1?id_type=NUMBER</code>. No <code>app.js</code> isso fica em uma única função, <code>urlDocumento</code>, para não ser esquecido. Músicas adicionadas à mão não têm id do Deezer; o MongoDB dá a elas um <code>ObjectId</code>, que não precisa de parâmetro extra.</li>
+</ul>
+
+<h2>4. Experimente</h2>
+<div class="task">
+<p>Suba os contêineres (<code>docker compose up -d</code>). No PowerShell do Windows use <code>curl.exe</code> (o <code>curl</code> sem o <code>.exe</code> é outro comando do PowerShell). Crie um arquivo <code>doc.json</code> na sua pasta de testes com uma música de teste:</p>
+<pre>{ "_id": 1, "titulo": "Teste", "duracao": 100, "vitorias": 0 }</pre>
+<pre>curl.exe -i -u admin:secret -X PUT http://localhost:8080/musica
+curl.exe -i -u admin:secret -X POST -H "Content-Type: application/json" -d "@doc.json" http://localhost:8080/musica
+curl.exe -i -u admin:secret http://localhost:8080/musica/1
+curl.exe -u admin:secret "http://localhost:8080/musica/1?id_type=NUMBER"</pre>
+<p>Espere 201 na primeira (200 se o app já criou a coleção) e 201 no POST. A terceira responde 404 e a quarta devolve o seu documento: é a armadilha 4. Rode o POST uma segunda vez e veja o 409. Depois apague os dados de teste para não sujar o seu ranking:</p>
+<pre>curl.exe -i -u admin:secret -X DELETE "http://localhost:8080/musica/1?id_type=NUMBER"</pre>
+<p class="note">Confuso com algum código de status? Copie a saída completa antes de pedir ajuda. As mesmas requisições viram cliques no Postman na próxima aula.</p>
+</div>
+
+<h2>5. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="1" data-why="O PUT substitui o documento inteiro, então os campos que você não enviou são apagados.">
+<p>Você faz PUT de <code>{"titulo": "x"}</code> em uma música que tem vitórias. O que acontece?</p>
+<button>Só o título muda; vitorias fica</button>
+<button>O documento inteiro é substituído; vitorias some</button>
+<button>O servidor rejeita com erro 409</button>
+<button>Uma segunda cópia da música é criada</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="_id duplicado em um POST é um conflito, e o original continua intacto.">
+<p>Você faz POST de uma música cujo <code>_id</code> já existe. O que recebe?</p>
+<button>201 e a música é sobrescrita</button>
+<button>404 porque a música não existe</button>
+<button>204 sem corpo na resposta</button>
+<button>409 e o original não muda</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="O PATCH com $inc altera um número sem mexer nos outros campos.">
+<p>Qual requisição soma 1 a <code>vitorias</code> e deixa o resto como está?</p>
+<button>PATCH com <code>{"$inc": {"vitorias": 1}}</code></button>
+<button>PUT com <code>{"vitorias": 1}</code></button>
+<button>POST com <code>{"vitorias": 1}</code></button>
+<button>DELETE e depois POST da música de novo</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="2" data-why="Sem ?id_type=NUMBER, o RESTHeart procura o texto &quot;1&quot;, que não existe.">
+<p>Uma música foi salva com <code>"_id": 1</code> (número). O que <code>GET /musica/1</code> retorna?</p>
+<button>200, os ids são convertidos sozinhos</button>
+<button>409, porque o id é duplicado</button>
+<button>404, ele procura o texto "1"</button>
+<button>400, números não são aceitos como id</button>
+<div class="fb"></div></div>
+
+<h2>Próxima aula</h2>
+<p>Leia o <a href="https://restheart.org/docs/mongodb-rest/tutorial">tutorial do RESTHeart</a> (fonte principal desta aula, em inglês). A aula 3 faz as mesmas requisições no Postman e guarda o ID do novo documento em uma variável.</p>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

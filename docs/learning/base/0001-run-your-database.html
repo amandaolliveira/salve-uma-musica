@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 1: Run your database</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Lesson 1: Run your database with one command</h1>
+<p class="lede">Win: start the containers, see them "running", and know what each command does to your data.</p>
+
+<h2>1. What is a container?</h2>
+<p>A container is an isolated process that carries every file it needs, so it behaves the same on any machine. Unlike a virtual machine it shares the host's kernel, so it is light.
+(<a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/">Docker docs</a>)
+Your project uses three: one for MongoDB (stores documents), one for RESTHeart (turns MongoDB into an HTTP API) and one for nginx (serves the frontend, see lesson 4).</p>
+
+<h2>2. What is Compose?</h2>
+<p>Compose describes several containers, networks and volumes in one YAML file and starts them together.
+(<a href="https://docs.docker.com/compose/gettingstarted/">Docker docs</a>) Your file is <code>docker-compose.yml</code> in the repo root. Three lines matter most:</p>
+<pre>ports:
+  - "8080:8080"          # host port : container port. Left side is YOUR computer.
+volumes:
+  - dados-mongo:/data/db # named volume mounted where MongoDB writes its data
+depends_on:
+  - mongodb              # start MongoDB first</pre>
+
+<h2>3. Try it</h2>
+<div class="task">
+<p>Open a terminal in the repo root (where <code>docker-compose.yml</code> is). Docker Desktop must be open.</p>
+<pre>docker --version
+docker compose up -d     # first run downloads the images, be patient
+docker compose ps        # all three services should say "running"
+docker compose logs -f restheart   # Ctrl+C to leave the logs</pre>
+<p>Then open <a href="http://localhost:8080">http://localhost:8080</a> in your browser. A login prompt (or JSON) means RESTHeart is answering. Use <code>admin</code> / <code>secret</code>.</p>
+<p class="note">Stuck? Copy the exact error message before asking for help. Port 8080 busy? Change the left number only (e.g. "8081:8080").</p>
+</div>
+
+<h2>4. Check yourself</h2>
+<div class="quiz" data-answer="0" data-why="-v removes named volumes, so your documents are gone.">
+<p>What does <code>docker compose down -v</code> do?</p>
+<button>Stops containers and deletes named volume data</button>
+<button>Stops containers but keeps every named volume</button>
+<button>Restarts containers then prints verbose log output</button>
+<button>Pulls fresh images then rebuilds each container</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="2" data-why="In host:container, the host is the left side.">
+<p>In <code>"8080:80"</code>, which statement is true?</p>
+<button>The right number is your computer</button>
+<button>Both numbers refer only to containers</button>
+<button>The left number is your computer</button>
+<button>The left number is the container</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="1" data-why="Named volumes live outside containers; only down -v deletes them.">
+<p>Why do your documents survive <code>docker compose down</code>?</p>
+<button>Docker copies data into the repository</button>
+<button>A named volume lives outside containers</button>
+<button>MongoDB stores everything inside the image</button>
+<button>Compose keeps a hidden backup container</button>
+<div class="fb"></div></div>
+
+<h2>Next</h2>
+<p>Read the <a href="https://docs.docker.com/compose/gettingstarted/">Compose tutorial</a> (primary source for this lesson). Lesson 2 explains how MongoDB and RESTHeart store your data. Lesson 3 will send your first Postman request.</p>
+</section>
+
+<section lang="pt-BR">
+<h1>Aula 1: Rode seu banco de dados com um comando</h1>
+<p class="lede">Objetivo: subir os contêineres, vê-los como "running" e saber o que cada comando faz com seus dados.</p>
+
+<h2>1. O que é um contêiner?</h2>
+<p>Um contêiner é um processo isolado que leva consigo todos os arquivos de que precisa, então se comporta igual em qualquer máquina. Diferente de uma máquina virtual, ele usa o kernel do computador hospedeiro, por isso é leve.
+(<a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/">Documentação do Docker</a>, em inglês)
+Seu projeto usa três: um para o MongoDB (guarda os documentos), um para o RESTHeart (transforma o MongoDB em uma API HTTP) e um para o nginx (serve o frontend, ver aula 4).</p>
+
+<h2>2. O que é o Compose?</h2>
+<p>O Compose descreve vários contêineres, redes e volumes em um único arquivo YAML e os inicia juntos.
+(<a href="https://docs.docker.com/compose/gettingstarted/">Documentação do Docker</a>, em inglês) Seu arquivo é o <code>docker-compose.yml</code>, na raiz do repositório. Três linhas importam mais:</p>
+<pre>ports:
+  - "8080:8080"          # porta do host : porta do contêiner. O lado esquerdo é o SEU computador.
+volumes:
+  - dados-mongo:/data/db # volume nomeado montado onde o MongoDB grava seus dados
+depends_on:
+  - mongodb              # inicie o MongoDB primeiro</pre>
+
+<h2>3. Experimente</h2>
+<div class="task">
+<p>Abra um terminal na raiz do repositório (onde está o <code>docker-compose.yml</code>). O Docker Desktop precisa estar aberto.</p>
+<pre>docker --version
+docker compose up -d     # na primeira vez baixa as imagens, tenha paciência
+docker compose ps        # os três serviços devem aparecer como "running"
+docker compose logs -f restheart   # Ctrl+C para sair dos logs</pre>
+<p>Depois abra <a href="http://localhost:8080">http://localhost:8080</a> no navegador. Um pedido de login (ou um JSON) significa que o RESTHeart está respondendo. Use <code>admin</code> / <code>secret</code>.</p>
+<p class="note">Travou? Copie a mensagem de erro exata antes de pedir ajuda. Porta 8080 ocupada? Troque só o número da esquerda (por exemplo, "8081:8080").</p>
+</div>
+
+<h2>4. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="0" data-why="-v remove os volumes nomeados, então seus documentos somem.">
+<p>O que faz <code>docker compose down -v</code>?</p>
+<button>Para os contêineres e apaga os dados do volume nomeado</button>
+<button>Para os contêineres mas mantém todos os volumes nomeados</button>
+<button>Reinicia os contêineres e mostra logs detalhados</button>
+<button>Baixa imagens novas e reconstrói cada contêiner</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="2" data-why="Em host:contêiner, o host é o lado esquerdo.">
+<p>Em <code>"8080:80"</code>, qual afirmação é verdadeira?</p>
+<button>O número da direita é o seu computador</button>
+<button>Os dois números se referem só a contêineres</button>
+<button>O número da esquerda é o seu computador</button>
+<button>O número da esquerda é o contêiner</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="1" data-why="Volumes nomeados ficam fora dos contêineres; só o down -v os apaga.">
+<p>Por que seus documentos sobrevivem ao <code>docker compose down</code>?</p>
+<button>O Docker copia os dados para o repositório</button>
+<button>Um volume nomeado vive fora dos contêineres</button>
+<button>O MongoDB guarda tudo dentro da imagem</button>
+<button>O Compose mantém um contêiner de backup escondido</button>
+<div class="fb"></div></div>
+
+<h2>Próxima aula</h2>
+<p>Leia o <a href="https://docs.docker.com/compose/gettingstarted/">tutorial do Compose</a> (fonte principal desta aula, em inglês). A aula 2 explica como o MongoDB e o RESTHeart guardam seus dados. A aula 3 vai enviar sua primeira requisição no Postman.</p>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
