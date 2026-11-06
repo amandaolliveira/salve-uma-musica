@@ -90,7 +90,7 @@ Expected, at the end: <code>banco-de-dados -&gt; banco-de-dados</code>. The firs
 <table>
 <tr><th>If you see</th><th>Do this</th></tr>
 <tr><td><code>nothing to commit</code></td><td>The file was not saved in the editor. Save it and start again from step 2.</td></tr>
-<tr><td><code>[master ...]</code> in step 4, or <code>Everything up-to-date</code> in step 5 with nothing new on GitHub</td><td>The commit went to the wrong branch. Run <code>git switch banco-de-dados</code>, then <code>git cherry-pick master</code> (copies that last commit to your branch), then <code>git push origin banco-de-dados</code>. Do not push <code>master</code>.</td></tr>
+<tr><td><code>[master ...]</code> in step 4, or <code>Everything up-to-date</code> in step 5 with nothing new on GitHub</td><td>The commit went to the wrong branch. In order: <code>git switch banco-de-dados</code>, then <code>git restore --source master docs/estrutura_banco.md</code> (brings your file(s) exactly as you last saved them), then repeat steps 3 to 5. Do not push <code>master</code>. Once your commit shows on GitHub, clean up: <code>git switch master</code>, <code>git reset --hard origin/master</code>, <code>git switch banco-de-dados</code>.</td></tr>
 <tr><td><code>rejected ... fetch first</code></td><td>Someone pushed to your branch before you. Run <code>git pull origin banco-de-dados</code>, then repeat step 5.</td></tr>
 <tr><td><code>Permission denied</code> or <code>403</code></td><td>Your GitHub account is not a collaborator yet. Ask the repository owner.</td></tr>
 </table>
@@ -204,7 +204,7 @@ Esperado, no fim: <code>banco-de-dados -&gt; banco-de-dados</code>. O primeiro p
 <table>
 <tr><th>Se aparecer</th><th>Faça isto</th></tr>
 <tr><td><code>nothing to commit</code></td><td>O arquivo não foi salvo no editor. Salve e recomece do passo 2.</td></tr>
-<tr><td><code>[master ...]</code> no passo 4, ou <code>Everything up-to-date</code> no passo 5 sem nada novo no GitHub</td><td>O commit foi para a branch errada. Rode <code>git switch banco-de-dados</code>, depois <code>git cherry-pick master</code> (copia esse último commit para a sua branch), depois <code>git push origin banco-de-dados</code>. Não faça push da <code>master</code>.</td></tr>
+<tr><td><code>[master ...]</code> no passo 4, ou <code>Everything up-to-date</code> no passo 5 sem nada novo no GitHub</td><td>O commit foi para a branch errada. Na ordem: <code>git switch banco-de-dados</code>, depois <code>git restore --source master docs/estrutura_banco.md</code> (traz o(s) seu(s) arquivo(s) exatamente como você salvou por último), depois repita os passos 3 a 5. Não faça push da <code>master</code>. Quando o seu commit aparecer no GitHub, limpe: <code>git switch master</code>, <code>git reset --hard origin/master</code>, <code>git switch banco-de-dados</code>.</td></tr>
 <tr><td><code>rejected ... fetch first</code></td><td>Alguém enviou algo para a sua branch antes de você. Rode <code>git pull origin banco-de-dados</code> e repita o passo 5.</td></tr>
 <tr><td><code>Permission denied</code> ou <code>403</code></td><td>A sua conta do GitHub ainda não é colaboradora. Peça ao dono do repositório.</td></tr>
 </table>
