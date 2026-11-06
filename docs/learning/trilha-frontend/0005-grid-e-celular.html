@@ -114,15 +114,36 @@
 </ol>
 </div>
 
-<h2>5. Final commit</h2>
+<h2>5. Send it to your branch, step by step (final)</h2>
 <div class="task">
-<pre>git branch                    the asterisk must be on frontend
-git status                    frontend/style.css (and index.html, if you changed it)
-git add frontend/style.css frontend/index.html
-git commit -m "style: grid, painel e layout no celular"
-git push</pre>
-<p>Then on GitHub, switch the branch selector to <code>frontend</code> and check that your commits appear in the history with your name.</p>
+<p>Run each command in the terminal, in the repository folder, and compare with the expected result before going to the next one.</p>
+<ol>
+<li><b>Confirm you are on your branch.</b>
+<pre>git branch</pre>
+Expected: <code>* frontend</code>. If the asterisk is on another branch, run <code>git switch frontend</code> first (your changes come along).</li>
+<li><b>See what changed.</b>
+<pre>git status</pre>
+Expected: <code>modified: frontend/style.css</code> (and <code>frontend/index.html</code>, if you changed it) in red, under "Changes not staged for commit".</li>
+<li><b>Choose what goes in the commit.</b>
+<pre>git add frontend/style.css frontend/index.html</pre>
+Run <code>git status</code> again: the same file(s) now appear in green, under "Changes to be committed".</li>
+<li><b>Save the commit.</b>
+<pre>git commit -m "style: grid, painel e layout no celular"</pre>
+Expected: a line starting with <code>[frontend </code> followed by a code and your message. The name in brackets must be <b>your</b> branch.</li>
+<li><b>Send it to your branch on GitHub.</b>
+<pre>git push origin frontend</pre>
+Expected, at the end: <code>frontend -&gt; frontend</code>. The first push may open the browser to log into GitHub.</li>
+<li><b>Check on GitHub.</b> Open the repository page, switch the branch selector (top left) to <code>frontend</code> and click the commit history: your commit is there, with your name.</li>
+</ol>
+<p class="note">Always write the branch name in the push: <code>git push origin frontend</code>. Never run <code>git push origin master</code>; <code>master</code> only changes when the group merges the branches.</p>
 </div>
+<table>
+<tr><th>If you see</th><th>Do this</th></tr>
+<tr><td><code>nothing to commit</code></td><td>The file was not saved in the editor. Save it and start again from step 2.</td></tr>
+<tr><td><code>[master ...]</code> in step 4, or <code>Everything up-to-date</code> in step 5 with nothing new on GitHub</td><td>The commit went to the wrong branch. In order: <code>git switch frontend</code>, then <code>git restore --source master frontend/style.css frontend/index.html</code> (brings your file(s) exactly as you last saved them), then repeat steps 3 to 5. Do not push <code>master</code>. Once your commit shows on GitHub, clean up: <code>git switch master</code>, <code>git reset --hard origin/master</code>, <code>git switch frontend</code>.</td></tr>
+<tr><td><code>rejected ... fetch first</code></td><td>Someone pushed to your branch before you. Run <code>git pull origin frontend</code>, then repeat step 5.</td></tr>
+<tr><td><code>Permission denied</code> or <code>403</code></td><td>Your GitHub account is not a collaborator yet. Ask the repository owner.</td></tr>
+</table>
 
 <details><summary>Full answer key: the whole style.css of this track</summary>
 <pre>/* ===== Aula 3 - base ===== */
@@ -449,15 +470,36 @@ label input, label select { font-weight: 400; }
 </ol>
 </div>
 
-<h2>5. Commit final</h2>
+<h2>5. Envie para a sua branch, passo a passo (final)</h2>
 <div class="task">
-<pre>git branch                    o asterisco precisa estar na frontend
-git status                    frontend/style.css (e o index.html, se você mudou)
-git add frontend/style.css frontend/index.html
-git commit -m "style: grid, painel e layout no celular"
-git push</pre>
-<p>Depois, no GitHub, troque o seletor de branch para <code>frontend</code> e confira se os seus commits aparecem no histórico com o seu nome.</p>
+<p>Rode cada comando no terminal, na pasta do repositório, e compare com o resultado esperado antes de ir para o próximo.</p>
+<ol>
+<li><b>Confirme que você está na sua branch.</b>
+<pre>git branch</pre>
+Esperado: <code>* frontend</code>. Se o asterisco estiver em outra branch, rode antes <code>git switch frontend</code> (as suas mudanças vêm junto).</li>
+<li><b>Veja o que mudou.</b>
+<pre>git status</pre>
+Esperado: <code>modified: frontend/style.css</code> (e <code>frontend/index.html</code>, se você mudou) em vermelho, em "Changes not staged for commit".</li>
+<li><b>Escolha o que vai no commit.</b>
+<pre>git add frontend/style.css frontend/index.html</pre>
+Rode <code>git status</code> de novo: o(s) mesmo(s) arquivo(s) agora aparece(m) em verde, em "Changes to be committed".</li>
+<li><b>Salve o commit.</b>
+<pre>git commit -m "style: grid, painel e layout no celular"</pre>
+Esperado: uma linha começando com <code>[frontend </code>, seguida de um código e da sua mensagem. O nome entre colchetes precisa ser a <b>sua</b> branch.</li>
+<li><b>Envie para a sua branch no GitHub.</b>
+<pre>git push origin frontend</pre>
+Esperado, no fim: <code>frontend -&gt; frontend</code>. O primeiro push pode abrir o navegador para entrar no GitHub.</li>
+<li><b>Confira no GitHub.</b> Abra a página do repositório, troque o seletor de branch (no canto superior esquerdo) para <code>frontend</code> e clique no histórico de commits: o seu commit está lá, com o seu nome.</li>
+</ol>
+<p class="note">Sempre escreva o nome da branch no push: <code>git push origin frontend</code>. Nunca rode <code>git push origin master</code>; a <code>master</code> só muda quando o grupo mescla as branches.</p>
 </div>
+<table>
+<tr><th>Se aparecer</th><th>Faça isto</th></tr>
+<tr><td><code>nothing to commit</code></td><td>O arquivo não foi salvo no editor. Salve e recomece do passo 2.</td></tr>
+<tr><td><code>[master ...]</code> no passo 4, ou <code>Everything up-to-date</code> no passo 5 sem nada novo no GitHub</td><td>O commit foi para a branch errada. Na ordem: <code>git switch frontend</code>, depois <code>git restore --source master frontend/style.css frontend/index.html</code> (traz o(s) seu(s) arquivo(s) exatamente como você salvou por último), depois repita os passos 3 a 5. Não faça push da <code>master</code>. Quando o seu commit aparecer no GitHub, limpe: <code>git switch master</code>, <code>git reset --hard origin/master</code>, <code>git switch frontend</code>.</td></tr>
+<tr><td><code>rejected ... fetch first</code></td><td>Alguém enviou algo para a sua branch antes de você. Rode <code>git pull origin frontend</code> e repita o passo 5.</td></tr>
+<tr><td><code>Permission denied</code> ou <code>403</code></td><td>A sua conta do GitHub ainda não é colaboradora. Peça ao dono do repositório.</td></tr>
+</table>
 
 <details><summary>Gabarito completo: o style.css inteiro desta trilha</summary>
 <pre>/* ===== Aula 3 - base ===== */
