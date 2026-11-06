@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frontend 5: Grid and the phone layout</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Frontend 5: Grid and the phone layout</h1>
+<p class="lede">Win: put the indicators, the charts, the song list and the form in grids, make the page work on a phone with one media query, test it in the browser's device mode, and push. This closes the "layout that works on the phone" requirement.</p>
+
+<h2>1. Grid in one line</h2>
+<p>Flexbox lines things up in one direction. Grid makes rows <i>and</i> columns (<a href="https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Grids">MDN: Grids</a>). The line you will use most:</p>
+<pre>grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));</pre>
+<p>Read it as: "as many columns as fit, each at least 160px wide, sharing the leftover space equally". On a wide screen that gives 5 columns; on a phone, 2 or 1. No media query needed. Two more pieces:</p>
+<ul>
+<li><code>gap</code>: space between cells, as in flexbox.</li>
+<li><code>grid-column: 1 / -1</code>: this child spans the whole row.</li>
+</ul>
+
+<h2>2. The tasks</h2>
+<div class="task">
+<p><b>Task 1, indicators.</b> <code>.indicadores</code>: a grid of boxes, at least 140px each. <code>.indicador</code>: value on top (big, highlight color), label below (small, soft color), light background, rounded.</p>
+</div>
+<details><summary>Answer key, task 1</summary>
+<pre>.indicadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.indicador { display: flex; flex-direction: column; padding: 12px; background: var(--fundo); border-radius: var(--raio); }
+.indicador-valor { font-size: 1.6rem; font-weight: 700; color: var(--destaque); }
+.indicador-rotulo { font-size: .9rem; color: var(--texto-suave); }</pre>
+</details>
+
+<div class="task">
+<p><b>Task 2, charts and the genre table.</b> <code>.graficos</code>: the two charts side by side on wide screens (at least 280px each), one under the other on a phone. Give <code>.grafico</code> <code>min-width: 0</code> so the chart can shrink. <code>.tabela-generos</code>: full width, a thin line under each row.</p>
+</div>
+<details><summary>Answer key, task 2</summary>
+<pre>.graficos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.grafico { margin: 0; min-width: 0; }
+.grafico figcaption { text-align: center; font-size: .9rem; color: var(--texto-suave); }
+
+.tabela-generos { width: 100%; border-collapse: collapse; }
+.tabela-generos th, .tabela-generos td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--borda); }</pre>
+<p class="note">The charts are drawn by Chart.js inside the <code>&lt;canvas&gt;</code>; their colors are in <code>CORES_GRAFICOS</code> at the top of <code>app.js</code>, the only line of that file you may change.</p>
+</details>
+
+<div class="task">
+<p><b>Task 3, the song list.</b> <code>.lista-musicas</code>: cards in a grid, at least 300px each; remove the list bullets and the default padding of the <code>&lt;ul&gt;</code>.</p>
+</div>
+<details><summary>Answer key, task 3</summary>
+<pre>.lista-musicas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}</pre>
+<p class="note"><code>auto-fill</code> instead of <code>auto-fit</code>: with only one or two songs (after a search), the cards keep their size instead of stretching across the row.</p>
+</details>
+
+<div class="task">
+<p><b>Task 4, the form.</b> <code>.form-musica</code>: fields in a grid (at least 220px each). The error list and the buttons take a whole row each.</p>
+</div>
+<details><summary>Answer key, task 4</summary>
+<pre>.form-musica {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.form-erros, .form-botoes { grid-column: 1 / -1; }
+.form-erros { margin: 0; color: var(--erro); }</pre>
+</details>
+
+<h2>3. The phone: one media query</h2>
+<p>A media query applies rules only when a condition is true, for example a screen narrower than 600px (<a href="https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Media_queries">MDN: media queries</a>). Most of the page already adapts thanks to <code>auto-fit</code> and <code>flex-wrap</code>. Only three things need help:</p>
+<div class="task">
+<p><b>Task 5.</b> Below 600px: the two game options one under the other, each full width, with a smaller cover; the song list in a single column that is allowed to shrink.</p>
+</div>
+<details><summary>Answer key, task 5</summary>
+<pre>@media (max-width: 600px) {
+  .confronto-opcoes { flex-direction: column; }
+  .opcao { width: 100%; max-width: none; }
+  .opcao .capa { max-width: 120px; }
+  .lista-musicas { grid-template-columns: minmax(0, 1fr); }
+}</pre>
+<p class="note">Why <code>minmax(0, 1fr)</code> and not just <code>1fr</code>? A <code>1fr</code> column never gets narrower than its content. The titles are kept on one line, so a long title would make the column wider than the phone and the page would scroll sideways. <code>minmax(0, 1fr)</code> lets the column shrink, and the title gets its "...".</p>
+</details>
+
+<h2>4. Test it as a phone</h2>
+<div class="task">
+<ol>
+<li>Open <a href="http://localhost:3000">localhost:3000</a>, press F12, then <b>Ctrl+Shift+M</b> (device mode). At the top, pick a phone such as <i>iPhone 12 Pro</i> (390px wide). (<a href="https://developer.chrome.com/docs/devtools/device-mode">Chrome docs: device mode</a>)</li>
+<li>Check each line:
+<ul>
+<li>No sideways scrolling anywhere on the page.</li>
+<li>The menu fits (it may drop below the title).</li>
+<li>Indicators in two columns; charts one under the other.</li>
+<li>In a game, the options are stacked and both buttons are easy to tap.</li>
+<li>Songs in one column, long titles with "...", buttons below each card.</li>
+<li>Form fields one per row.</li>
+</ul></li>
+<li>Close device mode and check the desktop again: 3 cards per row, options side by side.</li>
+</ol>
+</div>
+
+<h2>5. Send it to your branch, step by step (final)</h2>
+<div class="task">
+<p>Run each command in the terminal, in the repository folder, and compare with the expected result before going to the next one.</p>
+<ol>
+<li><b>Confirm you are on your branch.</b>
+<pre>git branch</pre>
+Expected: <code>* frontend</code>. If the asterisk is on another branch, run <code>git switch frontend</code> first (your changes come along).</li>
+<li><b>See what changed.</b>
+<pre>git status</pre>
+Expected: <code>modified: frontend/style.css</code> (and <code>frontend/index.html</code>, if you changed it) in red, under "Changes not staged for commit".</li>
+<li><b>Choose what goes in the commit.</b>
+<pre>git add frontend/style.css frontend/index.html</pre>
+Run <code>git status</code> again: the same file(s) now appear in green, under "Changes to be committed".</li>
+<li><b>Save the commit.</b>
+<pre>git commit -m "style: grid, painel e layout no celular"</pre>
+Expected: a line starting with <code>[frontend </code> followed by a code and your message. The name in brackets must be <b>your</b> branch.</li>
+<li><b>Send it to your branch on GitHub.</b>
+<pre>git push origin frontend</pre>
+Expected, at the end: <code>frontend -&gt; frontend</code>. The first push may open the browser to log into GitHub.</li>
+<li><b>Check on GitHub.</b> Open the repository page, switch the branch selector (top left) to <code>frontend</code> and click the commit history: your commit is there, with your name.</li>
+</ol>
+<p class="note">Always write the branch name in the push: <code>git push origin frontend</code>. Never run <code>git push origin master</code>; <code>master</code> only changes when the group merges the branches.</p>
+</div>
+<table>
+<tr><th>If you see</th><th>Do this</th></tr>
+<tr><td><code>nothing to commit</code></td><td>The file was not saved in the editor. Save it and start again from step 2.</td></tr>
+<tr><td><code>[master ...]</code> in step 4, or <code>Everything up-to-date</code> in step 5 with nothing new on GitHub</td><td>The commit went to the wrong branch. In order: <code>git switch frontend</code>, then <code>git restore --source master frontend/style.css frontend/index.html</code> (brings your file(s) exactly as you last saved them), then repeat steps 3 to 5. Do not push <code>master</code>. Once your commit shows on GitHub, clean up: <code>git switch master</code>, <code>git reset --hard origin/master</code>, <code>git switch frontend</code>.</td></tr>
+<tr><td><code>rejected ... fetch first</code></td><td>Someone pushed to your branch before you. Run <code>git pull origin frontend</code>, then repeat step 5.</td></tr>
+<tr><td><code>Permission denied</code> or <code>403</code></td><td>Your GitHub account is not a collaborator yet. Ask the repository owner.</td></tr>
+</table>
+
+<details><summary>Full answer key: the whole style.css of this track</summary>
+<pre>/* ===== Aula 3 - base ===== */
+[hidden] { display: none !important; }
+
+:root {
+  --fundo: #f6f4fb;
+  --superficie: #ffffff;
+  --texto: #1f1d2b;
+  --texto-suave: #6b6880;
+  --destaque: #6c3df4;
+  --destaque-texto: #ffffff;
+  --borda: #e2def0;
+  --sucesso: #1e8e4e;
+  --erro: #c0392b;
+  --raio: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  background: var(--fundo);
+  color: var(--texto);
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+.secao {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+button {
+  font: inherit;
+  padding: 8px 14px;
+  border: 1px solid var(--destaque);
+  border-radius: 8px;
+  background: var(--destaque);
+  color: var(--destaque-texto);
+  cursor: pointer;
+}
+
+input, select {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+/* ===== Aula 4 - flexbox ===== */
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding: 12px 16px;
+  background: var(--destaque);
+  color: var(--destaque-texto);
+}
+.cabecalho h1 { margin: 0; font-size: 1.4rem; }
+.menu { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.menu a { color: inherit; font-weight: 600; text-decoration: none; }
+
+.mensagem {
+  position: sticky;
+  top: 8px;
+  z-index: 10;
+  margin: 12px 16px 0;
+  padding: 10px 16px;
+  border-radius: var(--raio);
+  font-weight: 600;
+}
+.mensagem.carregando { background: #eef0ff; }
+.mensagem.sucesso { background: #e5f6ec; color: var(--sucesso); }
+.mensagem.erro { background: #fbeaea; color: var(--erro); }
+
+label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
+label input, label select { font-weight: 400; }
+
+.form-jogo, .form-importar, .filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+.filtros input { flex: 1 1 220px; }
+
+.confronto, .vencedor { text-align: center; }
+.confronto-fase { margin: 0; font-size: 1.3rem; font-weight: 700; }
+.confronto-progresso { margin-top: 4px; color: var(--texto-suave); }
+.confronto-opcoes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 16px 0;
+}
+.opcao {
+  flex: 1 1 0;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px;
+  background: var(--superficie);
+  color: var(--texto);
+  border: 2px solid var(--borda);
+}
+.opcao:hover { border-color: var(--destaque); }
+.opcao .capa { width: 100%; max-width: 200px; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
+.opcao-artista { color: var(--texto-suave); }
+.versus { font-weight: 700; color: var(--texto-suave); }
+.vencedor .capa { width: 200px; height: 200px; object-fit: cover; border-radius: var(--raio); }
+
+.musica {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+.musica .capa { width: 64px; height: 64px; flex-shrink: 0; object-fit: cover; border-radius: 6px; }
+.musica-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.musica-titulo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.musica-artista, .musica-detalhes { font-size: .9rem; color: var(--texto-suave); }
+.musica-acoes { display: flex; flex-wrap: wrap; gap: 6px; flex-basis: 100%; }
+.musica-acoes button { padding: 4px 10px; font-size: .85rem; }
+.botao-excluir { background: var(--erro); border-color: var(--erro); }
+.form-botoes { display: flex; gap: 8px; }
+
+/* ===== Aula 5 - grid e celular ===== */
+.indicadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.indicador { display: flex; flex-direction: column; padding: 12px; background: var(--fundo); border-radius: var(--raio); }
+.indicador-valor { font-size: 1.6rem; font-weight: 700; color: var(--destaque); }
+.indicador-rotulo { font-size: .9rem; color: var(--texto-suave); }
+
+.graficos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.grafico { margin: 0; min-width: 0; }
+.grafico figcaption { text-align: center; font-size: .9rem; color: var(--texto-suave); }
+
+.tabela-generos { width: 100%; border-collapse: collapse; }
+.tabela-generos th, .tabela-generos td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--borda); }
+
+.lista-musicas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.form-musica {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.form-erros, .form-botoes { grid-column: 1 / -1; }
+.form-erros { margin: 0; color: var(--erro); }
+
+@media (max-width: 600px) {
+  .confronto-opcoes { flex-direction: column; }
+  .opcao { width: 100%; max-width: none; }
+  .opcao .capa { max-width: 120px; }
+  .lista-musicas { grid-template-columns: minmax(0, 1fr); }
+}</pre>
+</details>
+
+<h2>6. Check yourself</h2>
+<div class="quiz" data-answer="2" data-why="auto-fit with minmax creates as many columns as fit, each at least the minimum, so the count changes with the screen.">
+<p>What does <code>repeat(auto-fit, minmax(140px, 1fr))</code> do on a phone?</p>
+<button>Always 5 columns, very narrow</button>
+<button>One column, always</button>
+<button>As many 140px+ columns as fit, usually 2</button>
+<button>Nothing without a media query</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="1" data-why="grid-column: 1 / -1 goes from the first to the last grid line, the whole row.">
+<p>How do you make the form buttons take the whole row in the grid?</p>
+<button>width: 100%</button>
+<button>grid-column: 1 / -1</button>
+<button>display: block</button>
+<button>flex-basis: 100%</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="Rules inside @media (max-width: 600px) only apply when the screen is 600px wide or less.">
+<p>When do the rules inside <code>@media (max-width: 600px)</code> apply?</p>
+<button>Always, the media query is a comment</button>
+<button>Only when printing the page</button>
+<button>Only on screens wider than 600px</button>
+<button>Only on screens 600px wide or less</button>
+<div class="fb"></div></div>
+
+<p>Track finished. When the database colleague also finishes, the group merges the branches and all three do <a href="../base/0005-presentation-rehearsal.html">base lesson 5</a>.</p>
+</section>
+
+<section lang="pt-BR">
+<h1>Frontend 5: Grid e o layout no celular</h1>
+<p class="lede">Objetivo: colocar os indicadores, os gráficos, a lista de músicas e o formulário em grids, fazer a página funcionar no celular com uma media query, testar no modo dispositivo do navegador e fazer push. Isso fecha o requisito "layout que funcione no celular".</p>
+
+<h2>1. Grid em uma linha</h2>
+<p>O flexbox alinha as coisas em uma direção. O grid faz linhas <i>e</i> colunas (<a href="https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Grids">MDN: Grids</a>, em inglês). A linha que você mais vai usar:</p>
+<pre>grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));</pre>
+<p>Leia assim: "quantas colunas couberem, cada uma com pelo menos 160px, dividindo igualmente o espaço que sobra". Em uma tela larga isso dá 5 colunas; no celular, 2 ou 1. Sem media query. Mais duas peças:</p>
+<ul>
+<li><code>gap</code>: espaço entre as células, como no flexbox.</li>
+<li><code>grid-column: 1 / -1</code>: esse filho ocupa a linha inteira.</li>
+</ul>
+
+<h2>2. As tarefas</h2>
+<div class="task">
+<p><b>Tarefa 1, indicadores.</b> <code>.indicadores</code>: um grid de caixas, com pelo menos 140px cada. <code>.indicador</code>: valor em cima (grande, cor de destaque), rótulo embaixo (pequeno, cor suave), fundo claro, cantos arredondados.</p>
+</div>
+<details><summary>Gabarito, tarefa 1</summary>
+<pre>.indicadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.indicador { display: flex; flex-direction: column; padding: 12px; background: var(--fundo); border-radius: var(--raio); }
+.indicador-valor { font-size: 1.6rem; font-weight: 700; color: var(--destaque); }
+.indicador-rotulo { font-size: .9rem; color: var(--texto-suave); }</pre>
+</details>
+
+<div class="task">
+<p><b>Tarefa 2, gráficos e a tabela de gêneros.</b> <code>.graficos</code>: os dois gráficos lado a lado em telas largas (pelo menos 280px cada), um embaixo do outro no celular. Dê ao <code>.grafico</code> um <code>min-width: 0</code> para o gráfico conseguir encolher. <code>.tabela-generos</code>: largura total, uma linha fina embaixo de cada linha.</p>
+</div>
+<details><summary>Gabarito, tarefa 2</summary>
+<pre>.graficos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.grafico { margin: 0; min-width: 0; }
+.grafico figcaption { text-align: center; font-size: .9rem; color: var(--texto-suave); }
+
+.tabela-generos { width: 100%; border-collapse: collapse; }
+.tabela-generos th, .tabela-generos td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--borda); }</pre>
+<p class="note">Os gráficos são desenhados pelo Chart.js dentro do <code>&lt;canvas&gt;</code>; as cores deles ficam em <code>CORES_GRAFICOS</code>, no topo do <code>app.js</code>, a única linha desse arquivo que você pode mudar.</p>
+</details>
+
+<div class="task">
+<p><b>Tarefa 3, a lista de músicas.</b> <code>.lista-musicas</code>: cartões em grid, com pelo menos 300px cada; tire os marcadores da lista e o padding padrão do <code>&lt;ul&gt;</code>.</p>
+</div>
+<details><summary>Gabarito, tarefa 3</summary>
+<pre>.lista-musicas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}</pre>
+<p class="note"><code>auto-fill</code> em vez de <code>auto-fit</code>: com só uma ou duas músicas (depois de uma busca), os cartões mantêm o tamanho em vez de esticar pela linha toda.</p>
+</details>
+
+<div class="task">
+<p><b>Tarefa 4, o formulário.</b> <code>.form-musica</code>: campos em grid (pelo menos 220px cada). A lista de erros e os botões ocupam uma linha inteira cada.</p>
+</div>
+<details><summary>Gabarito, tarefa 4</summary>
+<pre>.form-musica {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.form-erros, .form-botoes { grid-column: 1 / -1; }
+.form-erros { margin: 0; color: var(--erro); }</pre>
+</details>
+
+<h2>3. O celular: uma media query</h2>
+<p>Uma media query aplica regras só quando uma condição é verdadeira, por exemplo uma tela mais estreita que 600px (<a href="https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Media_queries">MDN: media queries</a>, em inglês). Quase toda a página já se ajusta graças ao <code>auto-fit</code> e ao <code>flex-wrap</code>. Só três coisas precisam de ajuda:</p>
+<div class="task">
+<p><b>Tarefa 5.</b> Abaixo de 600px: as duas opções do jogo uma embaixo da outra, cada uma com a largura toda, e com a capa menor; a lista de músicas em uma coluna só, que tenha permissão para encolher.</p>
+</div>
+<details><summary>Gabarito, tarefa 5</summary>
+<pre>@media (max-width: 600px) {
+  .confronto-opcoes { flex-direction: column; }
+  .opcao { width: 100%; max-width: none; }
+  .opcao .capa { max-width: 120px; }
+  .lista-musicas { grid-template-columns: minmax(0, 1fr); }
+}</pre>
+<p class="note">Por que <code>minmax(0, 1fr)</code> e não só <code>1fr</code>? Uma coluna <code>1fr</code> nunca fica mais estreita que o conteúdo dela. Os títulos ficam em uma linha só, então um título longo deixaria a coluna mais larga que o celular e a página rolaria para o lado. O <code>minmax(0, 1fr)</code> deixa a coluna encolher, e o título ganha o "...".</p>
+</details>
+
+<h2>4. Teste como celular</h2>
+<div class="task">
+<ol>
+<li>Abra <a href="http://localhost:3000">localhost:3000</a>, aperte F12 e depois <b>Ctrl+Shift+M</b> (modo dispositivo). No topo, escolha um celular como <i>iPhone 12 Pro</i> (390px de largura). (<a href="https://developer.chrome.com/docs/devtools/device-mode">Documentação do Chrome: modo dispositivo</a>, em inglês)</li>
+<li>Confira cada linha:
+<ul>
+<li>Nenhuma rolagem para o lado em nenhum ponto da página.</li>
+<li>O menu cabe (pode descer para baixo do título).</li>
+<li>Indicadores em duas colunas; gráficos um embaixo do outro.</li>
+<li>Em uma partida, as opções ficam empilhadas e os dois botões são fáceis de tocar.</li>
+<li>Músicas em uma coluna, títulos longos com "...", botões embaixo de cada cartão.</li>
+<li>Campos do formulário um por linha.</li>
+</ul></li>
+<li>Feche o modo dispositivo e confira o computador de novo: 3 cartões por linha, opções lado a lado.</li>
+</ol>
+</div>
+
+<h2>5. Envie para a sua branch, passo a passo (final)</h2>
+<div class="task">
+<p>Rode cada comando no terminal, na pasta do repositório, e compare com o resultado esperado antes de ir para o próximo.</p>
+<ol>
+<li><b>Confirme que você está na sua branch.</b>
+<pre>git branch</pre>
+Esperado: <code>* frontend</code>. Se o asterisco estiver em outra branch, rode antes <code>git switch frontend</code> (as suas mudanças vêm junto).</li>
+<li><b>Veja o que mudou.</b>
+<pre>git status</pre>
+Esperado: <code>modified: frontend/style.css</code> (e <code>frontend/index.html</code>, se você mudou) em vermelho, em "Changes not staged for commit".</li>
+<li><b>Escolha o que vai no commit.</b>
+<pre>git add frontend/style.css frontend/index.html</pre>
+Rode <code>git status</code> de novo: o(s) mesmo(s) arquivo(s) agora aparece(m) em verde, em "Changes to be committed".</li>
+<li><b>Salve o commit.</b>
+<pre>git commit -m "style: grid, painel e layout no celular"</pre>
+Esperado: uma linha começando com <code>[frontend </code>, seguida de um código e da sua mensagem. O nome entre colchetes precisa ser a <b>sua</b> branch.</li>
+<li><b>Envie para a sua branch no GitHub.</b>
+<pre>git push origin frontend</pre>
+Esperado, no fim: <code>frontend -&gt; frontend</code>. O primeiro push pode abrir o navegador para entrar no GitHub.</li>
+<li><b>Confira no GitHub.</b> Abra a página do repositório, troque o seletor de branch (no canto superior esquerdo) para <code>frontend</code> e clique no histórico de commits: o seu commit está lá, com o seu nome.</li>
+</ol>
+<p class="note">Sempre escreva o nome da branch no push: <code>git push origin frontend</code>. Nunca rode <code>git push origin master</code>; a <code>master</code> só muda quando o grupo mescla as branches.</p>
+</div>
+<table>
+<tr><th>Se aparecer</th><th>Faça isto</th></tr>
+<tr><td><code>nothing to commit</code></td><td>O arquivo não foi salvo no editor. Salve e recomece do passo 2.</td></tr>
+<tr><td><code>[master ...]</code> no passo 4, ou <code>Everything up-to-date</code> no passo 5 sem nada novo no GitHub</td><td>O commit foi para a branch errada. Na ordem: <code>git switch frontend</code>, depois <code>git restore --source master frontend/style.css frontend/index.html</code> (traz o(s) seu(s) arquivo(s) exatamente como você salvou por último), depois repita os passos 3 a 5. Não faça push da <code>master</code>. Quando o seu commit aparecer no GitHub, limpe: <code>git switch master</code>, <code>git reset --hard origin/master</code>, <code>git switch frontend</code>.</td></tr>
+<tr><td><code>rejected ... fetch first</code></td><td>Alguém enviou algo para a sua branch antes de você. Rode <code>git pull origin frontend</code> e repita o passo 5.</td></tr>
+<tr><td><code>Permission denied</code> ou <code>403</code></td><td>A sua conta do GitHub ainda não é colaboradora. Peça ao dono do repositório.</td></tr>
+</table>
+
+<details><summary>Gabarito completo: o style.css inteiro desta trilha</summary>
+<pre>/* ===== Aula 3 - base ===== */
+[hidden] { display: none !important; }
+
+:root {
+  --fundo: #f6f4fb;
+  --superficie: #ffffff;
+  --texto: #1f1d2b;
+  --texto-suave: #6b6880;
+  --destaque: #6c3df4;
+  --destaque-texto: #ffffff;
+  --borda: #e2def0;
+  --sucesso: #1e8e4e;
+  --erro: #c0392b;
+  --raio: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  background: var(--fundo);
+  color: var(--texto);
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+.secao {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+button {
+  font: inherit;
+  padding: 8px 14px;
+  border: 1px solid var(--destaque);
+  border-radius: 8px;
+  background: var(--destaque);
+  color: var(--destaque-texto);
+  cursor: pointer;
+}
+
+input, select {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+/* ===== Aula 4 - flexbox ===== */
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding: 12px 16px;
+  background: var(--destaque);
+  color: var(--destaque-texto);
+}
+.cabecalho h1 { margin: 0; font-size: 1.4rem; }
+.menu { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.menu a { color: inherit; font-weight: 600; text-decoration: none; }
+
+.mensagem {
+  position: sticky;
+  top: 8px;
+  z-index: 10;
+  margin: 12px 16px 0;
+  padding: 10px 16px;
+  border-radius: var(--raio);
+  font-weight: 600;
+}
+.mensagem.carregando { background: #eef0ff; }
+.mensagem.sucesso { background: #e5f6ec; color: var(--sucesso); }
+.mensagem.erro { background: #fbeaea; color: var(--erro); }
+
+label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
+label input, label select { font-weight: 400; }
+
+.form-jogo, .form-importar, .filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+.filtros input { flex: 1 1 220px; }
+
+.confronto, .vencedor { text-align: center; }
+.confronto-fase { margin: 0; font-size: 1.3rem; font-weight: 700; }
+.confronto-progresso { margin-top: 4px; color: var(--texto-suave); }
+.confronto-opcoes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 16px 0;
+}
+.opcao {
+  flex: 1 1 0;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px;
+  background: var(--superficie);
+  color: var(--texto);
+  border: 2px solid var(--borda);
+}
+.opcao:hover { border-color: var(--destaque); }
+.opcao .capa { width: 100%; max-width: 200px; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
+.opcao-artista { color: var(--texto-suave); }
+.versus { font-weight: 700; color: var(--texto-suave); }
+.vencedor .capa { width: 200px; height: 200px; object-fit: cover; border-radius: var(--raio); }
+
+.musica {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+.musica .capa { width: 64px; height: 64px; flex-shrink: 0; object-fit: cover; border-radius: 6px; }
+.musica-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.musica-titulo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.musica-artista, .musica-detalhes { font-size: .9rem; color: var(--texto-suave); }
+.musica-acoes { display: flex; flex-wrap: wrap; gap: 6px; flex-basis: 100%; }
+.musica-acoes button { padding: 4px 10px; font-size: .85rem; }
+.botao-excluir { background: var(--erro); border-color: var(--erro); }
+.form-botoes { display: flex; gap: 8px; }
+
+/* ===== Aula 5 - grid e celular ===== */
+.indicadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.indicador { display: flex; flex-direction: column; padding: 12px; background: var(--fundo); border-radius: var(--raio); }
+.indicador-valor { font-size: 1.6rem; font-weight: 700; color: var(--destaque); }
+.indicador-rotulo { font-size: .9rem; color: var(--texto-suave); }
+
+.graficos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.grafico { margin: 0; min-width: 0; }
+.grafico figcaption { text-align: center; font-size: .9rem; color: var(--texto-suave); }
+
+.tabela-generos { width: 100%; border-collapse: collapse; }
+.tabela-generos th, .tabela-generos td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--borda); }
+
+.lista-musicas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.form-musica {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.form-erros, .form-botoes { grid-column: 1 / -1; }
+.form-erros { margin: 0; color: var(--erro); }
+
+@media (max-width: 600px) {
+  .confronto-opcoes { flex-direction: column; }
+  .opcao { width: 100%; max-width: none; }
+  .opcao .capa { max-width: 120px; }
+  .lista-musicas { grid-template-columns: minmax(0, 1fr); }
+}</pre>
+</details>
+
+<h2>6. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="2" data-why="auto-fit com minmax cria quantas colunas couberem, cada uma com pelo menos o mínimo, então a quantidade muda com a tela.">
+<p>O que <code>repeat(auto-fit, minmax(140px, 1fr))</code> faz no celular?</p>
+<button>Sempre 5 colunas, bem estreitas</button>
+<button>Uma coluna, sempre</button>
+<button>Quantas colunas de 140px+ couberem, normalmente 2</button>
+<button>Nada sem uma media query</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="1" data-why="grid-column: 1 / -1 vai da primeira à última linha do grid, a linha inteira.">
+<p>Como fazer os botões do formulário ocuparem a linha inteira no grid?</p>
+<button>width: 100%</button>
+<button>grid-column: 1 / -1</button>
+<button>display: block</button>
+<button>flex-basis: 100%</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="As regras dentro de @media (max-width: 600px) só valem quando a tela tem 600px ou menos.">
+<p>Quando valem as regras dentro de <code>@media (max-width: 600px)</code>?</p>
+<button>Sempre, a media query é um comentário</button>
+<button>Só ao imprimir a página</button>
+<button>Só em telas mais largas que 600px</button>
+<button>Só em telas com 600px ou menos</button>
+<div class="fb"></div></div>
+
+<p>Trilha concluída. Quando o colega do banco também terminar, o grupo mescla as branches e os três fazem a <a href="../base/0005-presentation-rehearsal.html">aula base 5</a>.</p>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

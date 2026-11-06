@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frontend 4: Flexbox</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Frontend 4: Flexbox</h1>
+<p class="lede">Win: lay out the header, the messages, the forms, the two game options and the song cards with flexbox. Needs lesson 3 (your base CSS) and songs imported.</p>
+
+<h2>1. Flexbox in five properties</h2>
+<p><code>display: flex</code> goes on the <b>parent</b>; its direct children line up in a row (<a href="https://developer.mozilla.org/pt-BR/docs/Learn/CSS/CSS_layout/Flexbox">MDN: Flexbox</a>).</p>
+<table>
+<tr><th>Property</th><th>On</th><th>What it does</th></tr>
+<tr><td><code>flex-direction: column</code></td><td>parent</td><td>children stacked instead of in a row</td></tr>
+<tr><td><code>justify-content</code></td><td>parent</td><td>spreads children along the row: <code>center</code>, <code>space-between</code>...</td></tr>
+<tr><td><code>align-items</code></td><td>parent</td><td>aligns children across the row: <code>center</code>, <code>flex-end</code>...</td></tr>
+<tr><td><code>gap</code></td><td>parent</td><td>space between children (no margins needed)</td></tr>
+<tr><td><code>flex-wrap: wrap</code></td><td>parent</td><td>children go to the next line when they do not fit</td></tr>
+<tr><td><code>flex: 1</code></td><td>child</td><td>this child grows to fill the free space</td></tr>
+<tr><td><code>flex-basis: 100%</code></td><td>child</td><td>this child takes a whole line</td></tr>
+</table>
+<p>Example: title on the left, menu on the right:</p>
+<pre>.cabecalho { display: flex; justify-content: space-between; align-items: center; }</pre>
+<p class="note">Tip: F12, click an element with <code>display: flex</code>; DevTools shows a small <b>flex</b> badge that draws the layout on the page.</p>
+
+<h2>2. The tasks</h2>
+<p>Do them in order, reloading (Ctrl+F5) after each. Each one has an answer key: try first, then compare.</p>
+
+<div class="task">
+<p><b>Task 1, header.</b> <code>.cabecalho</code>: highlight background, title left and menu right, both vertically centered; when the screen is narrow, the menu drops below the title. <code>.menu</code>: links in a row with space between them, no underline, text color of the header.</p>
+</div>
+<details><summary>Answer key, task 1</summary>
+<pre>.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding: 12px 16px;
+  background: var(--destaque);
+  color: var(--destaque-texto);
+}
+.cabecalho h1 { margin: 0; font-size: 1.4rem; }
+.menu { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.menu a { color: inherit; font-weight: 600; text-decoration: none; }</pre>
+</details>
+
+<div class="task">
+<p><b>Task 2, messages.</b> <code>.mensagem</code>: a rounded bar that stays at the top while you scroll (<code>position: sticky; top: 8px;</code>). One background per state: <code>.mensagem.carregando</code>, <code>.mensagem.sucesso</code> (green), <code>.mensagem.erro</code> (red). Test: submit the empty song form to see the error state.</p>
+</div>
+<details><summary>Answer key, task 2</summary>
+<pre>.mensagem {
+  position: sticky;
+  top: 8px;
+  z-index: 10;
+  margin: 12px 16px 0;
+  padding: 10px 16px;
+  border-radius: var(--raio);
+  font-weight: 600;
+}
+.mensagem.carregando { background: #eef0ff; }
+.mensagem.sucesso { background: #e5f6ec; color: var(--sucesso); }
+.mensagem.erro { background: #fbeaea; color: var(--erro); }</pre>
+</details>
+
+<div class="task">
+<p><b>Task 3, labels and form rows.</b> Every <code>label</code> holds a <code>&lt;span&gt;</code> and a field: stack them (column) with a small gap. Then <code>.form-jogo</code>, <code>.form-importar</code> and <code>.filtros</code>: fields side by side, wrapping when needed, aligned at the bottom so the buttons line up with the fields. The search box should grow to fill the row.</p>
+</div>
+<details><summary>Answer key, task 3</summary>
+<pre>label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
+label input, label select { font-weight: 400; }
+
+.form-jogo, .form-importar, .filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+.filtros input { flex: 1 1 220px; }</pre>
+</details>
+
+<div class="task">
+<p><b>Task 4, the game.</b> Start a game to see it. Centered texts; the phase name big. <code>.confronto-opcoes</code>: the two options side by side, centered, with the "vs" between them. Each <code>.opcao</code>: a card with the same width as the other, cover on top, title and artist below, a border that changes color on hover. The cover square (<code>aspect-ratio: 1; object-fit: cover;</code>). The winner's cover (<code>.vencedor .capa</code>) about 200px.</p>
+</div>
+<details><summary>Answer key, task 4</summary>
+<pre>.confronto, .vencedor { text-align: center; }
+.confronto-fase { margin: 0; font-size: 1.3rem; font-weight: 700; }
+.confronto-progresso { margin-top: 4px; color: var(--texto-suave); }
+.confronto-opcoes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 16px 0;
+}
+.opcao {
+  flex: 1 1 0;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px;
+  background: var(--superficie);
+  color: var(--texto);
+  border: 2px solid var(--borda);
+}
+.opcao:hover { border-color: var(--destaque); }
+.opcao .capa { width: 100%; max-width: 200px; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
+.opcao-artista { color: var(--texto-suave); }
+.versus { font-weight: 700; color: var(--texto-suave); }
+.vencedor .capa { width: 200px; height: 200px; object-fit: cover; border-radius: var(--raio); }</pre>
+<p class="note"><code>flex: 1 1 0</code> gives both options the same width no matter how long the titles are.</p>
+</details>
+
+<div class="task">
+<p><b>Task 5, the song card.</b> <code>.musica</code>: a card with the small cover (64px) on the left and the texts to its right; the buttons on their own line below. The title on one line, cut with "..." when too long. The delete button red. <code>.form-botoes</code>: the form's buttons side by side.</p>
+</div>
+<details><summary>Answer key, task 5</summary>
+<pre>.musica {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+.musica .capa { width: 64px; height: 64px; flex-shrink: 0; object-fit: cover; border-radius: 6px; }
+.musica-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.musica-titulo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.musica-artista, .musica-detalhes { font-size: .9rem; color: var(--texto-suave); }
+.musica-acoes { display: flex; flex-wrap: wrap; gap: 6px; flex-basis: 100%; }
+.musica-acoes button { padding: 4px 10px; font-size: .85rem; }
+.botao-excluir { background: var(--erro); border-color: var(--erro); }
+.form-botoes { display: flex; gap: 8px; }</pre>
+<p class="note"><code>min-width: 0</code> on <code>.musica-info</code> lets it shrink below the title's length, which is what makes the "..." appear. <code>flex-basis: 100%</code> sends the buttons to their own line.</p>
+</details>
+
+<p>The list is still one card per line: lesson 5 puts the cards in a grid.</p>
+
+<h2>3. Send it to your branch, step by step</h2>
+<div class="task">
+<p>Run each command in the terminal, in the repository folder, and compare with the expected result before going to the next one.</p>
+<ol>
+<li><b>Confirm you are on your branch.</b>
+<pre>git branch</pre>
+Expected: <code>* frontend</code>. If the asterisk is on another branch, run <code>git switch frontend</code> first (your changes come along).</li>
+<li><b>See what changed.</b>
+<pre>git status</pre>
+Expected: <code>modified: frontend/style.css</code> in red, under "Changes not staged for commit".</li>
+<li><b>Choose what goes in the commit.</b>
+<pre>git add frontend/style.css</pre>
+Run <code>git status</code> again: the same file(s) now appear in green, under "Changes to be committed".</li>
+<li><b>Save the commit.</b>
+<pre>git commit -m "style: layout com flexbox (cabeçalho, formulários, jogo e cartões)"</pre>
+Expected: a line starting with <code>[frontend </code> followed by a code and your message. The name in brackets must be <b>your</b> branch.</li>
+<li><b>Send it to your branch on GitHub.</b>
+<pre>git push origin frontend</pre>
+Expected, at the end: <code>frontend -&gt; frontend</code>. The first push may open the browser to log into GitHub.</li>
+<li><b>Check on GitHub.</b> Open the repository page, switch the branch selector (top left) to <code>frontend</code> and click the commit history: your commit is there, with your name.</li>
+</ol>
+<p class="note">Always write the branch name in the push: <code>git push origin frontend</code>. Never run <code>git push origin master</code>; <code>master</code> only changes when the group merges the branches.</p>
+</div>
+<table>
+<tr><th>If you see</th><th>Do this</th></tr>
+<tr><td><code>nothing to commit</code></td><td>The file was not saved in the editor. Save it and start again from step 2.</td></tr>
+<tr><td><code>[master ...]</code> in step 4, or <code>Everything up-to-date</code> in step 5 with nothing new on GitHub</td><td>The commit went to the wrong branch. In order: <code>git switch frontend</code>, then <code>git restore --source master frontend/style.css</code> (brings your file(s) exactly as you last saved them), then repeat steps 3 to 5. Do not push <code>master</code>. Once your commit shows on GitHub, clean up: <code>git switch master</code>, <code>git reset --hard origin/master</code>, <code>git switch frontend</code>.</td></tr>
+<tr><td><code>rejected ... fetch first</code></td><td>Someone pushed to your branch before you. Run <code>git pull origin frontend</code>, then repeat step 5.</td></tr>
+<tr><td><code>Permission denied</code> or <code>403</code></td><td>Your GitHub account is not a collaborator yet. Ask the repository owner.</td></tr>
+</table>
+
+<h2>4. Check yourself</h2>
+<div class="quiz" data-answer="1" data-why="space-between pushes the first child to the start and the last to the end.">
+<p>Which property puts the title at the left and the menu at the right?</p>
+<button>align-items: center</button>
+<button>justify-content: space-between</button>
+<button>flex-direction: column</button>
+<button>flex-wrap: wrap</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="flex-wrap lets children move to the next line instead of squeezing.">
+<p>On a narrow screen the filters squeeze into one line. What is missing?</p>
+<button>gap: 12px</button>
+<button>align-items: flex-end</button>
+<button>display: block</button>
+<button>flex-wrap: wrap</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="A flex child does not shrink below its content by default; min-width: 0 allows it, so the ellipsis can appear.">
+<p>The long title pushes the card wider instead of showing "...". What fixes it?</p>
+<button>min-width: 0 on .musica-info</button>
+<button>flex-basis: 100% on .musica-titulo</button>
+<button>display: flex on .musica-titulo</button>
+<button>gap: 0 on .musica</button>
+<div class="fb"></div></div>
+</section>
+
+<section lang="pt-BR">
+<h1>Frontend 4: Flexbox</h1>
+<p class="lede">Objetivo: montar o cabeçalho, as mensagens, os formulários, as duas opções do jogo e os cartões das músicas com flexbox. Precisa da aula 3 (o seu CSS base) e de músicas importadas.</p>
+
+<h2>1. Flexbox em cinco propriedades</h2>
+<p>O <code>display: flex</code> vai no <b>pai</b>; os filhos diretos dele se alinham em uma linha (<a href="https://developer.mozilla.org/pt-BR/docs/Learn/CSS/CSS_layout/Flexbox">MDN: Flexbox</a>).</p>
+<table>
+<tr><th>Propriedade</th><th>Em</th><th>O que faz</th></tr>
+<tr><td><code>flex-direction: column</code></td><td>pai</td><td>filhos empilhados em vez de lado a lado</td></tr>
+<tr><td><code>justify-content</code></td><td>pai</td><td>distribui os filhos ao longo da linha: <code>center</code>, <code>space-between</code>...</td></tr>
+<tr><td><code>align-items</code></td><td>pai</td><td>alinha os filhos no outro sentido: <code>center</code>, <code>flex-end</code>...</td></tr>
+<tr><td><code>gap</code></td><td>pai</td><td>espaço entre os filhos (sem precisar de margem)</td></tr>
+<tr><td><code>flex-wrap: wrap</code></td><td>pai</td><td>os filhos descem para a próxima linha quando não cabem</td></tr>
+<tr><td><code>flex: 1</code></td><td>filho</td><td>esse filho cresce para ocupar o espaço livre</td></tr>
+<tr><td><code>flex-basis: 100%</code></td><td>filho</td><td>esse filho ocupa uma linha inteira</td></tr>
+</table>
+<p>Exemplo: título à esquerda, menu à direita:</p>
+<pre>.cabecalho { display: flex; justify-content: space-between; align-items: center; }</pre>
+<p class="note">Dica: F12, clique em um elemento com <code>display: flex</code>; o DevTools mostra um selo <b>flex</b> que desenha o layout na página.</p>
+
+<h2>2. As tarefas</h2>
+<p>Faça na ordem, recarregando (Ctrl+F5) depois de cada uma. Cada uma tem gabarito: tente antes, depois compare.</p>
+
+<div class="task">
+<p><b>Tarefa 1, cabeçalho.</b> <code>.cabecalho</code>: fundo com a cor de destaque, título à esquerda e menu à direita, os dois centralizados na vertical; quando a tela é estreita, o menu desce para baixo do título. <code>.menu</code>: links em linha com espaço entre eles, sem sublinhado, com a cor de texto do cabeçalho.</p>
+</div>
+<details><summary>Gabarito, tarefa 1</summary>
+<pre>.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding: 12px 16px;
+  background: var(--destaque);
+  color: var(--destaque-texto);
+}
+.cabecalho h1 { margin: 0; font-size: 1.4rem; }
+.menu { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.menu a { color: inherit; font-weight: 600; text-decoration: none; }</pre>
+</details>
+
+<div class="task">
+<p><b>Tarefa 2, mensagens.</b> <code>.mensagem</code>: uma barra arredondada que fica no topo enquanto você rola a página (<code>position: sticky; top: 8px;</code>). Um fundo para cada estado: <code>.mensagem.carregando</code>, <code>.mensagem.sucesso</code> (verde), <code>.mensagem.erro</code> (vermelho). Teste: envie o formulário de música vazio para ver o estado de erro.</p>
+</div>
+<details><summary>Gabarito, tarefa 2</summary>
+<pre>.mensagem {
+  position: sticky;
+  top: 8px;
+  z-index: 10;
+  margin: 12px 16px 0;
+  padding: 10px 16px;
+  border-radius: var(--raio);
+  font-weight: 600;
+}
+.mensagem.carregando { background: #eef0ff; }
+.mensagem.sucesso { background: #e5f6ec; color: var(--sucesso); }
+.mensagem.erro { background: #fbeaea; color: var(--erro); }</pre>
+</details>
+
+<div class="task">
+<p><b>Tarefa 3, rótulos e linhas de formulário.</b> Todo <code>label</code> tem um <code>&lt;span&gt;</code> e um campo: empilhe os dois (coluna) com um espaço pequeno. Depois <code>.form-jogo</code>, <code>.form-importar</code> e <code>.filtros</code>: campos lado a lado, quebrando linha quando precisar, alinhados por baixo para os botões ficarem na linha dos campos. A caixa de busca deve crescer para ocupar a linha.</p>
+</div>
+<details><summary>Gabarito, tarefa 3</summary>
+<pre>label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
+label input, label select { font-weight: 400; }
+
+.form-jogo, .form-importar, .filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+.filtros input { flex: 1 1 220px; }</pre>
+</details>
+
+<div class="task">
+<p><b>Tarefa 4, o jogo.</b> Comece uma partida para ver. Textos centralizados; o nome da fase grande. <code>.confronto-opcoes</code>: as duas opções lado a lado, centralizadas, com o "vs" entre elas. Cada <code>.opcao</code>: um cartão com a mesma largura do outro, capa em cima, título e artista embaixo, e uma borda que muda de cor ao passar o mouse. A capa quadrada (<code>aspect-ratio: 1; object-fit: cover;</code>). A capa da vencedora (<code>.vencedor .capa</code>) com uns 200px.</p>
+</div>
+<details><summary>Gabarito, tarefa 4</summary>
+<pre>.confronto, .vencedor { text-align: center; }
+.confronto-fase { margin: 0; font-size: 1.3rem; font-weight: 700; }
+.confronto-progresso { margin-top: 4px; color: var(--texto-suave); }
+.confronto-opcoes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 16px 0;
+}
+.opcao {
+  flex: 1 1 0;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px;
+  background: var(--superficie);
+  color: var(--texto);
+  border: 2px solid var(--borda);
+}
+.opcao:hover { border-color: var(--destaque); }
+.opcao .capa { width: 100%; max-width: 200px; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
+.opcao-artista { color: var(--texto-suave); }
+.versus { font-weight: 700; color: var(--texto-suave); }
+.vencedor .capa { width: 200px; height: 200px; object-fit: cover; border-radius: var(--raio); }</pre>
+<p class="note"><code>flex: 1 1 0</code> dá a mesma largura às duas opções, não importa o tamanho dos títulos.</p>
+</details>
+
+<div class="task">
+<p><b>Tarefa 5, o cartão da música.</b> <code>.musica</code>: um cartão com a capa pequena (64px) à esquerda e os textos à direita dela; os botões em uma linha própria embaixo. O título em uma linha só, cortado com "..." quando for longo. O botão de excluir vermelho. <code>.form-botoes</code>: os botões do formulário lado a lado.</p>
+</div>
+<details><summary>Gabarito, tarefa 5</summary>
+<pre>.musica {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+.musica .capa { width: 64px; height: 64px; flex-shrink: 0; object-fit: cover; border-radius: 6px; }
+.musica-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.musica-titulo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.musica-artista, .musica-detalhes { font-size: .9rem; color: var(--texto-suave); }
+.musica-acoes { display: flex; flex-wrap: wrap; gap: 6px; flex-basis: 100%; }
+.musica-acoes button { padding: 4px 10px; font-size: .85rem; }
+.botao-excluir { background: var(--erro); border-color: var(--erro); }
+.form-botoes { display: flex; gap: 8px; }</pre>
+<p class="note">O <code>min-width: 0</code> no <code>.musica-info</code> deixa ele encolher abaixo do tamanho do título, que é o que faz o "..." aparecer. O <code>flex-basis: 100%</code> manda os botões para uma linha própria.</p>
+</details>
+
+<p>A lista ainda tem um cartão por linha: a aula 5 coloca os cartões em um grid.</p>
+
+<h2>3. Envie para a sua branch, passo a passo</h2>
+<div class="task">
+<p>Rode cada comando no terminal, na pasta do repositório, e compare com o resultado esperado antes de ir para o próximo.</p>
+<ol>
+<li><b>Confirme que você está na sua branch.</b>
+<pre>git branch</pre>
+Esperado: <code>* frontend</code>. Se o asterisco estiver em outra branch, rode antes <code>git switch frontend</code> (as suas mudanças vêm junto).</li>
+<li><b>Veja o que mudou.</b>
+<pre>git status</pre>
+Esperado: <code>modified: frontend/style.css</code> em vermelho, em "Changes not staged for commit".</li>
+<li><b>Escolha o que vai no commit.</b>
+<pre>git add frontend/style.css</pre>
+Rode <code>git status</code> de novo: o(s) mesmo(s) arquivo(s) agora aparece(m) em verde, em "Changes to be committed".</li>
+<li><b>Salve o commit.</b>
+<pre>git commit -m "style: layout com flexbox (cabeçalho, formulários, jogo e cartões)"</pre>
+Esperado: uma linha começando com <code>[frontend </code>, seguida de um código e da sua mensagem. O nome entre colchetes precisa ser a <b>sua</b> branch.</li>
+<li><b>Envie para a sua branch no GitHub.</b>
+<pre>git push origin frontend</pre>
+Esperado, no fim: <code>frontend -&gt; frontend</code>. O primeiro push pode abrir o navegador para entrar no GitHub.</li>
+<li><b>Confira no GitHub.</b> Abra a página do repositório, troque o seletor de branch (no canto superior esquerdo) para <code>frontend</code> e clique no histórico de commits: o seu commit está lá, com o seu nome.</li>
+</ol>
+<p class="note">Sempre escreva o nome da branch no push: <code>git push origin frontend</code>. Nunca rode <code>git push origin master</code>; a <code>master</code> só muda quando o grupo mescla as branches.</p>
+</div>
+<table>
+<tr><th>Se aparecer</th><th>Faça isto</th></tr>
+<tr><td><code>nothing to commit</code></td><td>O arquivo não foi salvo no editor. Salve e recomece do passo 2.</td></tr>
+<tr><td><code>[master ...]</code> no passo 4, ou <code>Everything up-to-date</code> no passo 5 sem nada novo no GitHub</td><td>O commit foi para a branch errada. Na ordem: <code>git switch frontend</code>, depois <code>git restore --source master frontend/style.css</code> (traz o(s) seu(s) arquivo(s) exatamente como você salvou por último), depois repita os passos 3 a 5. Não faça push da <code>master</code>. Quando o seu commit aparecer no GitHub, limpe: <code>git switch master</code>, <code>git reset --hard origin/master</code>, <code>git switch frontend</code>.</td></tr>
+<tr><td><code>rejected ... fetch first</code></td><td>Alguém enviou algo para a sua branch antes de você. Rode <code>git pull origin frontend</code> e repita o passo 5.</td></tr>
+<tr><td><code>Permission denied</code> ou <code>403</code></td><td>A sua conta do GitHub ainda não é colaboradora. Peça ao dono do repositório.</td></tr>
+</table>
+
+<h2>4. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="1" data-why="O space-between empurra o primeiro filho para o começo e o último para o fim.">
+<p>Qual propriedade coloca o título à esquerda e o menu à direita?</p>
+<button>align-items: center</button>
+<button>justify-content: space-between</button>
+<button>flex-direction: column</button>
+<button>flex-wrap: wrap</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="3" data-why="O flex-wrap deixa os filhos descerem para a próxima linha em vez de se espremerem.">
+<p>Em uma tela estreita os filtros se espremem em uma linha. O que falta?</p>
+<button>gap: 12px</button>
+<button>align-items: flex-end</button>
+<button>display: block</button>
+<button>flex-wrap: wrap</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="Um filho flex não encolhe abaixo do conteúdo por padrão; o min-width: 0 permite, então o '...' aparece.">
+<p>O título longo alarga o cartão em vez de mostrar "...". O que resolve?</p>
+<button>min-width: 0 no .musica-info</button>
+<button>flex-basis: 100% no .musica-titulo</button>
+<button>display: flex no .musica-titulo</button>
+<button>gap: 0 no .musica</button>
+<div class="fb"></div></div>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
