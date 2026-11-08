@@ -44,3 +44,25 @@ As duas ficam no banco `restheart` (o nome que o RESTHeart usa por padrão).
 ```
 
 > Como o `_id` das músicas importadas é um número, o RESTHeart precisa do `?id_type=NUMBER` na URL pra achar o documento (ex.: `/musica/1?id_type=NUMBER`).
+
+## Justificativa
+
+O nome do artista fica **embutido** na música (`artista.nome_artista`), porque ele aparece
+em toda listagem e em todo round do jogo, assim uma unica leitura traz tudo, sem precisar de JOIN.
+
+O resto do artista (a imagem) fica na coleção `artista`, **referenciado** pelo `id_artista`.
+Um artista tem várias músicas e a imagem não é usada pelas telas, então não vale copiar em cada música.
+
+O custo: se um artista mudar de nome, todas as músicas dele precisam ser atualizadas.
+
+O `_id` das músicas importadas é o id do Deezer, assim, importar o mesmo gênero de novo
+não duplica nada: o RESTHeart responde 409 e a música é ignorada.
+
+## Verificação
+
+Conferido no MongoDB Compass em 07/11/2026 (banco `restheart`):
+
+- `musica`: 100 documentos (1 gênero importado: Rock)
+- `artista`: 56 documentos
+- Filtro `{ vitorias: { $gt: 0 } }`: 2 documentos, depois de 2 partidas
+- Um documento tem `duracao` e `vitorias` (números), `criado_em` (data) e `artista` (objeto embutido)
