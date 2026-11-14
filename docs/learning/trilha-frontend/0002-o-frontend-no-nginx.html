@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frontend 2: The frontend inside nginx</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Frontend 2: The frontend inside nginx</h1>
+<p class="lede">Win: explain how the <code>frontend</code> container serves your HTML and CSS, see an edit appear without restarting anything, and recognise three ways it breaks. This is the +1.0 extra point of the assignment, and the part you will explain in the demo. Needs base lesson 1.</p>
+
+<h2>1. What nginx does</h2>
+<p>nginx is a web server: it receives HTTP requests and answers with files from a folder (<a href="https://nginx.org/en/docs/beginners_guide.html">nginx beginner's guide</a>). The official image <code>nginx:alpine</code> serves whatever is in <code>/usr/share/nginx/html</code> inside the container (<a href="https://hub.docker.com/_/nginx">Docker Hub: nginx</a>). Our job is only to put <code>frontend/</code> there.</p>
+
+<h2>2. The service, line by line</h2>
+<pre>  frontend:
+    image: nginx:alpine          # small official nginx image
+    depends_on:
+      - restheart                # start after the API
+    ports:
+      - "3000:80"                # localhost:3000 on your computer -> port 80 of nginx
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro                     # your files, read-only
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro  # nginx settings (the proxy)</pre>
+<p><code>./frontend:/usr/share/nginx/html</code> is a <b>bind mount</b>: a folder of your computer shown inside the container (<a href="https://docs.docker.com/engine/storage/bind-mounts/">Docker docs: bind mounts</a>). It is not a copy, so when you save <code>style.css</code>, nginx already sees the new file. <code>:ro</code> means read-only: the container can read your files but never change them.</p>
+<p>Compare with the database: <code>dados-mongo</code> is a <i>named volume</i>, a storage area managed by Docker. Here we want the opposite, your own folder, so you can edit it.</p>
+
+<h2>3. The nginx settings (<code>nginx/default.conf</code>)</h2>
+<pre>location / {                     # any normal path: answer with a file
+    root  /usr/share/nginx/html;
+    index index.html;            # "/" means index.html
+}
+location /deezer/ {              # paths starting with /deezer/: ask Deezer
+    ...
+    proxy_pass $deezer;
+}</pre>
+<p>The page needs Deezer's genre and chart lists, but Deezer does not allow browsers on other sites to read its answers (that rule is called CORS). So the page asks nginx at <code>/deezer/...</code>, and nginx asks Deezer and passes the answer back. The requests to the database go straight from the browser to <code>localhost:8080</code> (RESTHeart allows it). You will not need to change this file.</p>
+
+<h2>4. Try it</h2>
+<div class="task">
+<p>In the repo folder, on your branch:</p>
+<ol>
+<li><b>Start and fill with data.</b> <code>docker compose up -d</code>, open <a href="http://localhost:3000">http://localhost:3000</a>, go to <b>Importar</b>, import a genre, and play one short game. You need songs on screen to style them later.</li>
+<li><b>Live edit.</b> Open <code>frontend/style.css</code>, add <code>body { background: yellow; }</code>, save, and reload the page (Ctrl+F5). The page turns yellow, with no restart. Delete that line and save.</li>
+<li><b>Read-only.</b> Run:
+<pre>docker compose exec frontend sh -c "echo teste > /usr/share/nginx/html/teste.txt"</pre>
+Expected: <code>Read-only file system</code>. That is the <code>:ro</code>.</li>
+<li><b>Port.</b> In <code>docker-compose.yml</code>, change <code>"3000:80"</code> to <code>"3001:80"</code>, save, run <code>docker compose up -d</code>. Now <a href="http://localhost:3001">localhost:3001</a> works and 3000 does not. Change it back to 3000 and run <code>docker compose up -d</code> again.</li>
+<li><b>Wrong folder.</b> Change <code>./frontend:</code> to <code>./frontendx:</code>, save, <code>docker compose up -d</code>, open localhost:3000: <b>403 Forbidden</b>. Docker created an empty folder <code>frontendx</code> on your computer and nginx found nothing to serve. Change it back, <code>docker compose up -d</code>, and delete the <code>frontendx</code> folder.</li>
+<li><b>The proxy.</b> Open <a href="http://localhost:3000/deezer/genre">localhost:3000/deezer/genre</a>: Deezer's JSON, through nginx.</li>
+</ol>
+<p>Finish with <code>git status</code>. Nothing should be listed as modified. If <code>docker-compose.yml</code> is, undo it with <code>git restore docker-compose.yml</code> and run <code>docker compose up -d</code>.</p>
+</div>
+
+<h2>5. If something goes wrong</h2>
+<table>
+<tr><th>Symptom</th><th>What to do</th></tr>
+<tr><td>The CSS change does not show</td><td>Ctrl+F5 (reload ignoring the cache). Check that you saved the file inside the repo's <code>frontend/</code> folder.</td></tr>
+<tr><td>403 Forbidden</td><td>The left side of the first volume is wrong, or compose was started from another folder.</td></tr>
+<tr><td><code>port is already allocated</code></td><td>Another program uses the port. Close it or use another left number.</td></tr>
+<tr><td>502 Bad Gateway on <code>/deezer/...</code></td><td>nginx could not reach Deezer: check the internet connection.</td></tr>
+</table>
+
+<h2>6. Check yourself</h2>
+<div class="quiz" data-answer="1" data-why="A bind mount shows your own folder inside the container, so a saved file is served at once.">
+<p>Why does a saved <code>style.css</code> show up without restarting the container?</p>
+<button>nginx copies the folder every second</button>
+<button>The folder is a bind mount, not a copy</button>
+<button>The browser reads the file from your disk</button>
+<button>docker compose watches the file for you</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="2" data-why=":ro mounts the folder read-only inside the container.">
+<p>What does <code>:ro</code> do?</p>
+<button>Restarts the container on changes</button>
+<button>Renames the folder inside the container</button>
+<button>Lets the container read but not change the files</button>
+<button>Opens the port only to your computer</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="Deezer does not allow pages from other sites to read its answers, so nginx asks for them.">
+<p>Why does the page call <code>/deezer/...</code> instead of <code>api.deezer.com</code>?</p>
+<button>The browser would block reading Deezer's answer (CORS)</button>
+<button>Deezer needs a password that nginx has</button>
+<button>It makes the import faster</button>
+<button>Deezer only answers on port 3000</button>
+<div class="fb"></div></div>
+</section>
+
+<section lang="pt-BR">
+<h1>Frontend 2: O frontend dentro do nginx</h1>
+<p class="lede">Objetivo: explicar como o contêiner <code>frontend</code> serve o seu HTML e CSS, ver uma alteração aparecer sem reiniciar nada, e reconhecer três jeitos de quebrar. Esse é o ponto extra (+1,0) do trabalho, e a parte que você vai explicar na apresentação. Precisa da aula base 1.</p>
+
+<h2>1. O que o nginx faz</h2>
+<p>O nginx é um servidor web: ele recebe requisições HTTP e responde com arquivos de uma pasta (<a href="https://nginx.org/en/docs/beginners_guide.html">guia para iniciantes do nginx</a>, em inglês). A imagem oficial <code>nginx:alpine</code> serve o que estiver em <code>/usr/share/nginx/html</code> dentro do contêiner (<a href="https://hub.docker.com/_/nginx">Docker Hub: nginx</a>). O nosso trabalho é só colocar a pasta <code>frontend/</code> ali.</p>
+
+<h2>2. O serviço, linha por linha</h2>
+<pre>  frontend:
+    image: nginx:alpine          # imagem oficial do nginx, pequena
+    depends_on:
+      - restheart                # sobe depois da API
+    ports:
+      - "3000:80"                # localhost:3000 do seu computador -> porta 80 do nginx
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro                     # seus arquivos, só leitura
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro  # configuração do nginx (o proxy)</pre>
+<p><code>./frontend:/usr/share/nginx/html</code> é um <b>bind mount</b>: uma pasta do seu computador mostrada dentro do contêiner (<a href="https://docs.docker.com/engine/storage/bind-mounts/">Documentação do Docker: bind mounts</a>, em inglês). Não é uma cópia, então quando você salva o <code>style.css</code>, o nginx já enxerga o arquivo novo. O <code>:ro</code> quer dizer só leitura: o contêiner pode ler os seus arquivos, mas nunca alterá-los.</p>
+<p>Compare com o banco: o <code>dados-mongo</code> é um <i>volume nomeado</i>, uma área gerenciada pelo Docker. Aqui queremos o contrário, a sua própria pasta, para você poder editar.</p>
+
+<h2>3. A configuração do nginx (<code>nginx/default.conf</code>)</h2>
+<pre>location / {                     # qualquer caminho normal: responde com um arquivo
+    root  /usr/share/nginx/html;
+    index index.html;            # "/" quer dizer index.html
+}
+location /deezer/ {              # caminhos que começam com /deezer/: pergunta ao Deezer
+    ...
+    proxy_pass $deezer;
+}</pre>
+<p>A página precisa das listas de gêneros e de músicas em alta do Deezer, mas o Deezer não deixa navegadores de outros sites lerem as respostas dele (essa regra se chama CORS). Então a página pergunta ao nginx em <code>/deezer/...</code>, e o nginx pergunta ao Deezer e devolve a resposta. As requisições ao banco vão direto do navegador para o <code>localhost:8080</code> (o RESTHeart permite). Você não vai precisar mudar esse arquivo.</p>
+
+<h2>4. Experimente</h2>
+<div class="task">
+<p>Na pasta do repositório, na sua branch:</p>
+<ol>
+<li><b>Suba e coloque dados.</b> <code>docker compose up -d</code>, abra <a href="http://localhost:3000">http://localhost:3000</a>, vá em <b>Importar</b>, importe um gênero e jogue uma partida curta. Você precisa de músicas na tela para estilizar depois.</li>
+<li><b>Edição ao vivo.</b> Abra o <code>frontend/style.css</code>, acrescente <code>body { background: yellow; }</code>, salve e recarregue a página (Ctrl+F5). A página fica amarela, sem reiniciar nada. Apague essa linha e salve.</li>
+<li><b>Só leitura.</b> Rode:
+<pre>docker compose exec frontend sh -c "echo teste > /usr/share/nginx/html/teste.txt"</pre>
+Esperado: <code>Read-only file system</code>. É o <code>:ro</code>.</li>
+<li><b>Porta.</b> No <code>docker-compose.yml</code>, troque <code>"3000:80"</code> por <code>"3001:80"</code>, salve e rode <code>docker compose up -d</code>. Agora <a href="http://localhost:3001">localhost:3001</a> funciona e a 3000 não. Volte para 3000 e rode <code>docker compose up -d</code> de novo.</li>
+<li><b>Pasta errada.</b> Troque <code>./frontend:</code> por <code>./frontendx:</code>, salve, <code>docker compose up -d</code> e abra localhost:3000: <b>403 Forbidden</b>. O Docker criou uma pasta vazia <code>frontendx</code> no seu computador e o nginx não achou nada para servir. Volte ao normal, <code>docker compose up -d</code>, e apague a pasta <code>frontendx</code>.</li>
+<li><b>O proxy.</b> Abra <a href="http://localhost:3000/deezer/genre">localhost:3000/deezer/genre</a>: o JSON do Deezer, passando pelo nginx.</li>
+</ol>
+<p>Termine com <code>git status</code>. Nada deve aparecer como modificado. Se o <code>docker-compose.yml</code> aparecer, desfaça com <code>git restore docker-compose.yml</code> e rode <code>docker compose up -d</code>.</p>
+</div>
+
+<h2>5. Se algo der errado</h2>
+<table>
+<tr><th>Sintoma</th><th>O que fazer</th></tr>
+<tr><td>A mudança no CSS não aparece</td><td>Ctrl+F5 (recarrega ignorando o cache). Confira se salvou o arquivo dentro da pasta <code>frontend/</code> do repositório.</td></tr>
+<tr><td>403 Forbidden</td><td>O lado esquerdo do primeiro volume está errado, ou o compose foi iniciado em outra pasta.</td></tr>
+<tr><td><code>port is already allocated</code></td><td>Outro programa usa a porta. Feche-o ou use outro número à esquerda.</td></tr>
+<tr><td>502 Bad Gateway em <code>/deezer/...</code></td><td>O nginx não conseguiu falar com o Deezer: confira a internet.</td></tr>
+</table>
+
+<h2>6. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="1" data-why="Um bind mount mostra a sua própria pasta dentro do contêiner, então um arquivo salvo é servido na hora.">
+<p>Por que um <code>style.css</code> salvo aparece sem reiniciar o contêiner?</p>
+<button>O nginx copia a pasta a cada segundo</button>
+<button>A pasta é um bind mount, não uma cópia</button>
+<button>O navegador lê o arquivo do seu disco</button>
+<button>O docker compose vigia o arquivo por você</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="2" data-why="O :ro monta a pasta como só leitura dentro do contêiner.">
+<p>O que o <code>:ro</code> faz?</p>
+<button>Reinicia o contêiner quando algo muda</button>
+<button>Renomeia a pasta dentro do contêiner</button>
+<button>Deixa o contêiner ler, mas não alterar os arquivos</button>
+<button>Abre a porta só para o seu computador</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="O Deezer não deixa páginas de outros sites lerem as respostas dele, então o nginx pede por elas.">
+<p>Por que a página chama <code>/deezer/...</code> em vez de <code>api.deezer.com</code>?</p>
+<button>O navegador bloquearia a leitura da resposta do Deezer (CORS)</button>
+<button>O Deezer precisa de uma senha que o nginx tem</button>
+<button>Deixa a importação mais rápida</button>
+<button>O Deezer só responde na porta 3000</button>
+<div class="fb"></div></div>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
