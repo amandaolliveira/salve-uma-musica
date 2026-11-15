@@ -87,10 +87,17 @@ async function buscarMusica(id) {
 }
 
 // 409 = já existe um documento com esse _id
+// 404 = a coleção sumiu depois que a página abriu (banco reiniciado ou coleção
+// apagada no Compass): cria de novo e tenta mais uma vez
 async function inserir(colecao, doc) {
-  const res = await fetch(`${API}/${colecao}`, {
+  const enviar = () => fetch(`${API}/${colecao}`, {
     method: 'POST', headers: HEADERS, body: JSON.stringify(doc)
   });
+  let res = await enviar();
+  if (res.status === 404) {
+    await requisicao(`${API}/${colecao}`, { method: 'PUT' });
+    res = await enviar();
+  }
   if (res.status !== 201 && res.status !== 409) {
     throw new ErroHttp(res.status, `HTTP ${res.status} ao gravar em ${colecao}`);
   }
