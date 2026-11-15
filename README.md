@@ -27,9 +27,9 @@ Aulas curtas e práticas (em português e inglês) que usamos pra aprender o que
 
 | Integrante | Papel |
 |---|---|
-| _(preencher)_ | Dados (modelagem e banco) |
-| _(preencher)_ | API (requisições e Postman) |
-| _(preencher)_ | Interface (CSS) |
+| _(Amanda)_ | Dados (modelagem e banco) |
+| _(Carlos)_ | API (requisições e Postman) |
+| _(Renan Carlin)_ | Interface (CSS) |
 
 ## API utilizada
 
@@ -104,7 +104,14 @@ A coleção do Postman está em [postman/colecao.json](postman/colecao.json).
 
 Tudo é recalculado depois de cada alteração no banco.
 
-_(prints pendentes)_
+> O que os dados do painel permitem concluir:
+
+- O painel transforma o uso do site em informação que ajuda a tomar decisões sobre o catálogo.
+- O ranking das músicas mais vitoriosas mostra quais faixas o público prefere, e o agrupamento por gênero revela quais estilos estão mais presentes no banco e quais se destacam nas partidas. Comparando os dois, é possível perceber se um gênero tem muitas músicas mas poucas vitórias (ou o contrário), e assim decidir onde ampliar ou revisar o acervo. 
+- O percentual de músicas adicionadas manualmente, frente às importadas, indica o quanto os usuários estão contribuindo com o catálogo, e a duração média ajuda a entender o perfil das músicas disponíveis.
+- O total de jogos concluídos funciona como medida de engajamento: quanto mais partidas, mais confiáveis ficam o ranking e as conclusões.
+- Como os indicadores se atualizam sozinhos após cada alteração, o painel serve como acompanhamento contínuo do uso da aplicação, e não como um retrato fixo.
+
 
 ## Conclusão
 

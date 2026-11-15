@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Database 4: Seeing the data in MongoDB Compass</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="trilha.js"></script>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+
+<section lang="en">
+<h1>Database 4: Seeing the data in MongoDB Compass</h1>
+<p class="lede">Win: open the real database in Compass (the MongoDB equivalent of MySQL Workbench), find the two collections, run filters and sorts, and write down the numbers you will use in lesson 5. Needs lesson 3 done and at least one genre imported.</p>
+
+<h2>1. Install and connect</h2>
+<div class="task">
+<ol>
+<li>Download MongoDB Compass from <a href="https://www.mongodb.com/try/download/compass">mongodb.com/try/download/compass</a> and install it.</li>
+<li>Make sure the project is running: <code>docker compose ps</code>.</li>
+<li>In Compass, create a new connection with the URI <code>mongodb://localhost:27017</code> and click <b>Connect</b>. (<a href="https://www.mongodb.com/docs/compass/current/connect/">Compass docs: connect</a>)</li>
+</ol>
+<p class="note">No user or password: this MongoDB has no login because it only runs on your computer. The <code>admin</code> / <code>secret</code> login belongs to RESTHeart, not to MongoDB.</p>
+</div>
+
+<h2>2. What you will see</h2>
+<p>On the left, four databases: <code>admin</code>, <code>config</code>, <code>local</code> (MongoDB's own) and <code>restheart</code> (ours). Open <code>restheart</code>:</p>
+<table>
+<tr><th>Collection</th><th>What it is</th></tr>
+<tr><td><code>musica</code></td><td>The songs. Ours.</td></tr>
+<tr><td><code>artista</code></td><td>The artists, referenced by <code>id_artista</code>. Ours.</td></tr>
+<tr><td><code>users</code>, <code>acl</code>, <code>_properties</code></td><td>RESTHeart's own (its login and permissions). <b>Do not change or delete them</b>: the app would stop working.</td></tr>
+</table>
+<p>Open <code>musica</code>. The <b>Documents</b> tab shows the total at the top (for example "1 – 20 of 100"). Open one document and look at the types (switch to the table view or hover a value):</p>
+<ul>
+<li><code>_id</code>: <b>Int32</b> or <b>Int64</b> (big Deezer ids need 64 bits). A song added by hand shows an <b>ObjectId</b> instead.</li>
+<li><code>artista</code>: <b>Object</b>, with <code>id_artista</code> and <code>nome_artista</code> inside: the embedded part.</li>
+<li><code>criado_em</code>: <b>String</b> with a date in ISO format (<code>2026-11-05T22:40:00.000Z</code>).</li>
+<li><code>_etag</code>: an ObjectId that RESTHeart adds to mark the document's version. The app ignores it.</li>
+</ul>
+
+<h2>3. Filters and sorting</h2>
+<p>(<a href="https://www.mongodb.com/docs/compass/current/query/filter/">Compass docs: query your data</a>) Type in the <b>Filter</b> bar and click <b>Find</b>. Under <b>Options</b> there are <b>Sort</b> and <b>Limit</b>.</p>
+<pre>Filter                                  SQL equivalent
+{ genero: "Rock" }                      WHERE genero = 'Rock'
+{ vitorias: { $gt: 0 } }                WHERE vitorias > 0
+{ adicionado_manualmente: true }        WHERE adicionado_manualmente = 1
+{ "artista.nome_artista": "Queen" }     WHERE nome_artista = 'Queen' (no JOIN!)
+
+Sort { vitorias: -1 } and Limit 10      ORDER BY vitorias DESC LIMIT 10</pre>
+<p class="note">The fourth filter reaches inside the embedded object with a dot. That is the practical gain of embedding.</p>
+
+<h2>4. Do it and write it down</h2>
+<div class="task">
+<ol>
+<li>Play one or two games in the app (<a href="http://localhost:3000">localhost:3000</a>), then in Compass run <code>{ vitorias: { $gt: 0 } }</code>: the winners appear. Click the refresh button if the list is old.</li>
+<li>Note for lesson 5: the date, the total of <code>musica</code>, the total of <code>artista</code>, how many genres you imported, and one filter you ran with its result count.</li>
+</ol>
+<p class="note">Compass can edit and delete documents. Do not use it for that: changes go through the app or Postman, which is what the assignment evaluates.</p>
+</div>
+
+<details><summary>Answer key: what a normal result looks like</summary>
+<ul>
+<li>One genre imported: <code>musica</code> has about 100 documents (up to 100 per genre; songs already present are skipped).</li>
+<li><code>artista</code> has <b>fewer</b> documents than <code>musica</code>, because one artist can have several songs in the chart.</li>
+<li><code>{ genero: "Rock" }</code> returns the songs of that import; another genre's songs do not appear.</li>
+<li>After 2 games, <code>{ vitorias: { $gt: 0 } }</code> returns 1 or 2 documents (2 if two different songs won).</li>
+</ul>
+</details>
+
+<h2>5. If something goes wrong</h2>
+<table>
+<tr><th>Symptom</th><th>What to do</th></tr>
+<tr><td><code>connect ECONNREFUSED 127.0.0.1:27017</code></td><td>Containers are not running (<code>docker compose up -d</code>), or you changed the port in lesson 3: use the new one in the URI.</td></tr>
+<tr><td>No <code>restheart</code> database</td><td>Nothing was created yet. Open <a href="http://localhost:3000">localhost:3000</a> once and import a genre, then refresh Compass.</td></tr>
+<tr><td>Numbers do not match the app</td><td>Click Compass's refresh button; it does not update by itself.</td></tr>
+</table>
+
+<h2>6. Check yourself</h2>
+<div class="quiz" data-answer="2" data-why="users, acl and _properties hold RESTHeart's login and permissions.">
+<p>What happens if you delete the <code>users</code> collection?</p>
+<button>Nothing, it is empty</button>
+<button>Only the song list disappears</button>
+<button>RESTHeart loses its login and the app stops working</button>
+<button>MongoDB recreates it with the songs</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="The dot reaches a field inside an embedded object.">
+<p>How do you filter by artist name without a JOIN?</p>
+<button>{ "artista.nome_artista": "Queen" }</button>
+<button>{ artista: "Queen" }</button>
+<button>{ nome: "Queen" }</button>
+<button>It is impossible without a JOIN</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="1" data-why="Many songs share one artist, and each artist is saved once.">
+<p>Why does <code>artista</code> have fewer documents than <code>musica</code>?</p>
+<button>Some artists failed to import</button>
+<button>One artist can have several songs</button>
+<button>Compass hides half of the artists</button>
+<button>Artists are deleted after each game</button>
+<div class="fb"></div></div>
+</section>
+
+<section lang="pt-BR">
+<h1>Banco 4: Vendo os dados no MongoDB Compass</h1>
+<p class="lede">Objetivo: abrir o banco de verdade no Compass (o equivalente do MySQL Workbench para o MongoDB), achar as duas coleções, rodar filtros e ordenações, e anotar os números que você vai usar na aula 5. Precisa da aula 3 concluída e de pelo menos um gênero importado.</p>
+
+<h2>1. Instale e conecte</h2>
+<div class="task">
+<ol>
+<li>Baixe o MongoDB Compass em <a href="https://www.mongodb.com/try/download/compass">mongodb.com/try/download/compass</a> e instale.</li>
+<li>Confira se o projeto está rodando: <code>docker compose ps</code>.</li>
+<li>No Compass, crie uma conexão nova com a URI <code>mongodb://localhost:27017</code> e clique em <b>Connect</b>. (<a href="https://www.mongodb.com/docs/compass/current/connect/">Documentação do Compass: conectar</a>, em inglês)</li>
+</ol>
+<p class="note">Sem usuário nem senha: este MongoDB não tem login porque só roda no seu computador. O login <code>admin</code> / <code>secret</code> é do RESTHeart, não do MongoDB.</p>
+</div>
+
+<h2>2. O que você vai ver</h2>
+<p>À esquerda, quatro bancos: <code>admin</code>, <code>config</code>, <code>local</code> (do próprio MongoDB) e <code>restheart</code> (o nosso). Abra o <code>restheart</code>:</p>
+<table>
+<tr><th>Coleção</th><th>O que é</th></tr>
+<tr><td><code>musica</code></td><td>As músicas. Nossa.</td></tr>
+<tr><td><code>artista</code></td><td>Os artistas, referenciados pelo <code>id_artista</code>. Nossa.</td></tr>
+<tr><td><code>users</code>, <code>acl</code>, <code>_properties</code></td><td>Do próprio RESTHeart (login e permissões dele). <b>Não altere nem apague</b>: o app pararia de funcionar.</td></tr>
+</table>
+<p>Abra a <code>musica</code>. A aba <b>Documents</b> mostra o total no topo (por exemplo "1 – 20 of 100"). Abra um documento e veja os tipos (troque para a visão de tabela ou passe o mouse sobre um valor):</p>
+<ul>
+<li><code>_id</code>: <b>Int32</b> ou <b>Int64</b> (ids grandes do Deezer precisam de 64 bits). Uma música adicionada à mão mostra um <b>ObjectId</b>.</li>
+<li><code>artista</code>: <b>Object</b>, com <code>id_artista</code> e <code>nome_artista</code> dentro: a parte embutida.</li>
+<li><code>criado_em</code>: <b>String</b> com uma data no formato ISO (<code>2026-11-05T22:40:00.000Z</code>).</li>
+<li><code>_etag</code>: um ObjectId que o RESTHeart coloca para marcar a versão do documento. O app ignora.</li>
+</ul>
+
+<h2>3. Filtros e ordenação</h2>
+<p>(<a href="https://www.mongodb.com/docs/compass/current/query/filter/">Documentação do Compass: consultar dados</a>, em inglês) Digite na barra <b>Filter</b> e clique em <b>Find</b>. Em <b>Options</b> ficam o <b>Sort</b> e o <b>Limit</b>.</p>
+<pre>Filtro                                  Equivalente em SQL
+{ genero: "Rock" }                      WHERE genero = 'Rock'
+{ vitorias: { $gt: 0 } }                WHERE vitorias > 0
+{ adicionado_manualmente: true }        WHERE adicionado_manualmente = 1
+{ "artista.nome_artista": "Queen" }     WHERE nome_artista = 'Queen' (sem JOIN!)
+
+Sort { vitorias: -1 } e Limit 10        ORDER BY vitorias DESC LIMIT 10</pre>
+<p class="note">O quarto filtro entra no objeto embutido com um ponto. Esse é o ganho prático de embutir.</p>
+
+<h2>4. Faça e anote</h2>
+<div class="task">
+<ol>
+<li>Jogue uma ou duas partidas no app (<a href="http://localhost:3000">localhost:3000</a>), depois rode no Compass <code>{ vitorias: { $gt: 0 } }</code>: as vencedoras aparecem. Clique no botão de atualizar se a lista estiver velha.</li>
+<li>Anote para a aula 5: a data, o total da <code>musica</code>, o total da <code>artista</code>, quantos gêneros você importou, e um filtro que você rodou com a quantidade de resultados.</li>
+</ol>
+<p class="note">O Compass consegue editar e apagar documentos. Não use para isso: as alterações passam pelo app ou pelo Postman, que é o que o trabalho avalia.</p>
+</div>
+
+<details><summary>Gabarito: como é um resultado normal</summary>
+<ul>
+<li>Um gênero importado: a <code>musica</code> tem uns 100 documentos (até 100 por gênero; as que já existiam são puladas).</li>
+<li>A <code>artista</code> tem <b>menos</b> documentos que a <code>musica</code>, porque um artista pode ter várias músicas no chart.</li>
+<li><code>{ genero: "Rock" }</code> devolve as músicas daquela importação; as de outro gênero não aparecem.</li>
+<li>Depois de 2 partidas, <code>{ vitorias: { $gt: 0 } }</code> devolve 1 ou 2 documentos (2 se duas músicas diferentes venceram).</li>
+</ul>
+</details>
+
+<h2>5. Se algo der errado</h2>
+<table>
+<tr><th>Sintoma</th><th>O que fazer</th></tr>
+<tr><td><code>connect ECONNREFUSED 127.0.0.1:27017</code></td><td>Os contêineres não estão rodando (<code>docker compose up -d</code>), ou você trocou a porta na aula 3: use a nova na URI.</td></tr>
+<tr><td>Não aparece o banco <code>restheart</code></td><td>Nada foi criado ainda. Abra <a href="http://localhost:3000">localhost:3000</a> uma vez e importe um gênero, depois atualize o Compass.</td></tr>
+<tr><td>Os números não batem com o app</td><td>Clique no botão de atualizar do Compass; ele não atualiza sozinho.</td></tr>
+</table>
+
+<h2>6. Teste o que aprendeu</h2>
+<div class="quiz" data-answer="2" data-why="users, acl e _properties guardam o login e as permissões do RESTHeart.">
+<p>O que acontece se você apagar a coleção <code>users</code>?</p>
+<button>Nada, ela está vazia</button>
+<button>Só a lista de músicas some</button>
+<button>O RESTHeart perde o login e o app para de funcionar</button>
+<button>O MongoDB recria ela com as músicas</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="0" data-why="O ponto entra em um campo dentro de um objeto embutido.">
+<p>Como filtrar pelo nome do artista sem JOIN?</p>
+<button>{ "artista.nome_artista": "Queen" }</button>
+<button>{ artista: "Queen" }</button>
+<button>{ nome: "Queen" }</button>
+<button>É impossível sem JOIN</button>
+<div class="fb"></div></div>
+
+<div class="quiz" data-answer="1" data-why="Várias músicas compartilham um artista, e cada artista é salvo uma vez.">
+<p>Por que a <code>artista</code> tem menos documentos que a <code>musica</code>?</p>
+<button>Alguns artistas falharam na importação</button>
+<button>Um artista pode ter várias músicas</button>
+<button>O Compass esconde metade dos artistas</button>
+<button>Os artistas são apagados depois de cada partida</button>
+<div class="fb"></div></div>
+</section>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
