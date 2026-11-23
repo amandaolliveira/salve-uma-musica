@@ -114,8 +114,10 @@ Tudo é recalculado depois de cada alteração no banco.
 
 
 ## Conclusão
-
-_(pendente)_
+Não conhecíamos com muita profundidade as tecnologias necessárias pra produzir a atividade (no caso.. Docker, MongoDB, Postman), apesar disso não foi tão complicado entender na prática oque essas coisas são;
+- Postman é uma ferramenta que 'automatiza'/facilta testes em rotas de requisições em APIs (internas e externas)
+- Docker é uma ferramenta que isola serviços em ambientes virtuais do computador, basicamente você não precisa baixar tudo no seu disco C do computador, gerenciamento de versão fica muito mais fácil e replicável entre ambientes e computadores diferentes que você utilize para desenvolver o projeto
+- MongoDB é um motor de banco de dados, mas funciona completamente diferente do SQL: Não existe um relacionamento forte entre entidades no banco, os relacionamentos são "inferidos", mas não obrigatórios.. Fora que é muito mais rápido e requer menos esforço pra normalização da estrutura (bom e ruim ao mesmo tempo)
 
 ## Uso de IA
 
